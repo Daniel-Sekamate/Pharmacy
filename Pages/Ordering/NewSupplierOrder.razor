@@ -1,0 +1,775 @@
+﻿@page "/Ordering/SupplierOrders";
+@using System.IO;
+@using Pharmacy.Models;
+@using Pharmacy.Data;
+@using System.Collections;
+@using Microsoft.EntityFrameworkCore;
+@using Syncfusion.Blazor.Data;
+@inject PharmacyContext _context;
+@inject NavigationManager Navigation;
+@inject UserManagement userManagement;
+<style>
+    .e-edit-dialog {
+        max-height: 98%;
+        max-width: 100%;
+        min-width: 98%;
+        min-height: 95%;
+    }
+
+    .e-grid.e-bothlines .e-rowcell {
+        border-width: 0px 1px 1px 0px;
+        border-color: lightgray;
+    }
+
+    .e-edit-dialog .e-gridform .e-table {
+        border-collapse: separate;
+        border-spacing: 1px;
+        width: 100%;
+        border-color: black;
+    }
+
+    .e-grid .e-gridheader /*For line that separates the grid header and content*/ {
+        border-bottom-color: #ea1b8d;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid tr.e-hover /*For row hover*/ {
+        background-color: #e66aae;
+        color: #FFFFFF;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-alt_row /*For Alternate row color*/ {
+        background-color: #E5E4E2; /*#99CFE3;*/
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-dialog .gridform .e-rowcell {
+        padding: .5em;
+        border-bottom: 1px solid #c8c8c8;
+        border-left: 1px solid #c8c8c8;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-headercell {
+        color: whitesmoke;
+        background-color: black;
+        font-family: Cambria;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .Category {
+        background-color: steelblue;
+        color: white;
+    }
+
+    .customCSS.e-rowcell {
+        background-color: #EFF5FB;
+        /*font-family: 'Bell MT';
+        font-style: italic;*/
+        /*color: whitesmoke;*/
+        /*font-size: 20px;*/
+        font: large bolder;
+        font-weight: bolder;
+        font-family: 'Times New Roman', Times, serif;
+    }
+</style>
+<ol class="breadcrumb" style="margin-top:5px;">
+    <li class="breadcrumb-item active" style="width: 100%; background-color: black; color: white; font-family: Cambria; padding: 5px; font: bolder;"> <stong> Create Orders </stong></li>
+</ol>
+<div class="row">
+    <div class="col-lg-12 control-section">
+        <SfToast @ref="ToastObj" ID="toast_type">
+            <ToastPosition X="@ToastPosition"></ToastPosition>
+        </SfToast>
+    </div>
+</div>
+<SfGrid @ref="DefaultGrid" TValue="spStoreSupplierOrderHeaderResult"
+        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" ShowColumnChooser="true" AllowTextWrap="true"
+        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+    <SfDataManager AdaptorInstance="@typeof(StoreSupplierNewOrderAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+    <GridEvents OnActionBegin="OnActionBegin" TValue="spStoreSupplierOrderHeaderResult"></GridEvents>
+    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+        <Template>
+            @{
+                ArtOrders = (context as spStoreSupplierOrderHeaderResult);
+                <div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <SfTextBox ID="OrderNumber" @bind-Value="@(ArtOrders.OrderNumber)" Placeholder="Order Number" Enabled="@((ArtOrders.OrderNumber == null) ? true : false)" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <SfDatePicker ID="OrderDate" @bind-Value="@(ArtOrders.OrderDate)" Enabled="false" Placeholder="Order Date" FloatLabelType="FloatLabelType.Always"></SfDatePicker>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <SfDropDownList ID="SupplierId" @bind-Value="@(ArtOrders.SupplierId)" Enabled="IscolumnEditable" TItem="AproductSupplier" TValue="int?" DataSource="@ProductSupplier" Placeholder="Supplier" FloatLabelType="FloatLabelType.Always">
+                                            <DropDownListEvents TItem="AproductSupplier" TValue="int?" ValueChange="OnSupplierChange"></DropDownListEvents>
+                                            <DropDownListFieldSettings Value="@nameof(AproductSupplier.SupplierId)" Text="@nameof(AproductSupplier.SupplierDescription)"></DropDownListFieldSettings>
+                                        </SfDropDownList>
+                                    </div>
+                                    <div class="form-group col-md-3" hidden="hidden">
+                                        <SfDropDownList ID="OrderStatus" @bind-Value="@(ArtOrders.Order_Status)" Enabled="false" TItem="AOrderStatus" TValue="int?" DataSource="@_OrderStatus" Placeholder="Order Status" FloatLabelType="FloatLabelType.Always">
+                                            <DropDownListFieldSettings Value="@nameof(AOrderStatus.OrderStatus)" Text="@nameof(AOrderStatus.StatusDescription)"></DropDownListFieldSettings>
+                                        </SfDropDownList>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6" style="padding-top:25px;">
+                                                <b>Submission Order</b>
+                                            </div>
+                                            <div class="form-group col-md-6" style="transform:scale(2);padding-top:20px;">
+                                                @if (ArtOrders.SubmitOrder == true)
+                                                {
+                                                    <input type="checkbox" id="SubmitOrder" @bind-value="@ArtOrders.SubmitOrder" name="SubmitOrder" checked="checked" class="e-field e-checkbox" style="width:30px" />
+                                                }
+                                                else
+                                                {
+                                                    <input type="checkbox" id="SubmitOrder" @bind-value="@ArtOrders.SubmitOrder" name="SubmitOrder" class="e-field e-checkbox" style="width:30px" />
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if(Iscolumnvisible== true)
+                                    {
+                                        <div class="form-group col-md-3">
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6" style="padding-top:25px;">
+                                                    <b>Confirm Order</b>
+                                                </div>
+                                                <div class="form-group col-md-6" style="transform:scale(2);padding-top:20px;">
+                                                    @if (ArtOrders.ConfirmSubmission == true)
+                                                    {
+                                                        <input type="checkbox" id="ConfirmSubmission" @bind-value="@ArtOrders.ConfirmSubmission" name="ConfirmSubmission" checked="checked" class="e-field e-checkbox" style="width:30px" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="checkbox" id="ConfirmSubmission" @bind-value="@ArtOrders.ConfirmSubmission" name="ConfirmSubmission" class="e-field e-checkbox" style="width:30px" />
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                </div>
+                    <SfTab ID="Ej2Tab" Width="100%">
+                        <TabItems>
+                            <TabItem>
+                                <ChildContent>
+                                    <TabHeader Text="Ordered Commodities"></TabHeader>
+                                </ChildContent>
+                                <ContentTemplate>
+                                    <SfGrid @ref="OrderGrid" TValue="spViewStoreSupplierOrdersResult" Query="@ChildQuery" GridLines="GridLine.Both"
+                                            Toolbar="@(new List<string>() { "ColumnChooser" })" AllowPaging="false" Width="auto" Height="420"
+                                            ShowColumnChooser="true" EnableAltRow="true" AllowFiltering="true" AllowTextWrap="true"
+                                            EnableHover="true" AllowSorting="true">
+                                        <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Both"></GridSelectionSettings>
+                                        <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                                        <SfDataManager AdaptorInstance="@typeof(StoreSupplierOrderDetailsAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                                        <GridEditSettings AllowAdding="false" AllowDeleting="false" AllowEditing="true" ShowConfirmDialog="false" Mode="EditMode.Batch"></GridEditSettings>
+                                        <GridEvents CellSaved="OnCellSaved" CellSelected="CellSelectHandler" OnCellEdit="OrderCellEditHandler" TValue="spViewStoreSupplierOrdersResult"></GridEvents>
+                                        <GridColumns>
+                                            <GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.ItemId) Visible="false" HeaderTextAlign="TextAlign.Center" ShowInColumnChooser="false" HeaderText="Item Number" IsPrimaryKey="true" ValidationRules="@(new ValidationRules{ Required=true})" Width="100"></GridColumn>
+                                            <GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.OrderNumber) Visible="false" HeaderTextAlign="TextAlign.Center" ShowInColumnChooser="false" HeaderText="Order Number" ValidationRules="@(new ValidationRules{ Required=true})" Width="100"></GridColumn>
+                                            @*<GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.ProductCode) ShowInColumnChooser="true" HeaderTextAlign="TextAlign.Center" AllowEditing="true" HeaderText="Product" ValidationRules="@(new ValidationRules{ Required=true})" Width="280" EditType="EditType.DropDownEdit" ForeignKeyField="@nameof(Aproduct.ProductCode)" ForeignKeyValue="@nameof(Aproduct.ProductDescription)" DataSource="@Product"></GridColumn>*@
+                                            <GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.ProductCode) HeaderText="Product" AllowEditing="false" EditType="EditType.DropDownEdit" Width="200" ForeignKeyField="@nameof(ViewProduct.ProductCode)" ForeignKeyValue="@nameof(ViewProduct.ProductDescription)" DataSource="@Product">
+                                                <EditTemplate Context="ProductContext">
+                                                    <SfDropDownList ID="ProductCode" Placeholder="Select a Product" Width="100%" PopupWidth="180%" PopupHeight="300px" AllowFiltering="true" TItem="ViewProduct" TValue="double" @bind-Value="@((ProductContext as spViewStoreSupplierOrdersResult).ProductCode)" DataSource="@Product">
+                                                        <DropDownListFieldSettings GroupBy="@nameof(ViewProduct.CategoryDescription)" Text="@nameof(ViewProduct.ProductDescription)" Value="@nameof(ViewProduct.ProductCode)"></DropDownListFieldSettings>
+                                                    </SfDropDownList>
+                                                </EditTemplate>
+                                            </GridColumn>
+
+                                            <GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.CategoryDescription) Visible="true" HeaderTextAlign="TextAlign.Center" ShowInColumnChooser="true" AllowEditing="false" HeaderText="Product Category" ValidationRules="@(new ValidationRules{ Required=true})" Width="100"></GridColumn>
+                                            <GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.PackSize) Visible="true" HeaderTextAlign="TextAlign.Center" ShowInColumnChooser="true" AllowEditing="false" HeaderText="Pack Size" EditType="EditType.NumericEdit" Format="N2" ValidationRules="@(new ValidationRules{ Required=true})" Width="100"></GridColumn>
+                                            <GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.RemainingStock) HeaderText="Remaining Balance" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" AllowEditing="false" ShowInColumnChooser="true" ValidationRules="@(new ValidationRules{ Required=true})" Width="100" EditType="EditType.NumericEdit" Format="N2"></GridColumn>
+                                            <GridColumn Field=@nameof(spViewStoreSupplierOrdersResult.QuantityOrderd) HeaderText="Quantity To Order" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Center" AllowEditing="true" ShowInColumnChooser="true" EditType="EditType.NumericEdit" Format="N2" ValidationRules="@(new ValidationRules{ Required=true})" Width="100"></GridColumn>
+                                        </GridColumns>
+                                    </SfGrid>
+                                </ContentTemplate>
+                            </TabItem>
+                        </TabItems>
+                    </SfTab>
+                </div>
+            }
+        </Template>
+    </GridEditSettings>
+    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <GridColumns>
+        <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+        <GridColumn Field=@nameof(spStoreSupplierOrderHeaderResult.OrderNumber) HeaderText="Order Number" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Left" IsPrimaryKey="true" Width="100"></GridColumn>
+        <GridColumn Field=@nameof(spStoreSupplierOrderHeaderResult.OrderDate) HeaderText="Order Date" HeaderTextAlign="TextAlign.Center" Format="d" EditType="EditType.DatePickerEdit" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+        <GridColumn Field=@nameof(spStoreSupplierOrderHeaderResult.Order_Status) HeaderText="Order Status" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Left" Width="100" EditType="EditType.DropDownEdit" ForeignKeyField="@nameof(AOrderStatus.OrderStatus)" ForeignKeyValue="@nameof(AOrderStatus.StatusDescription)" DataSource="@_OrderStatus"></GridColumn>
+        <GridColumn Field=@nameof(spStoreSupplierOrderHeaderResult.SupplierDescription) HeaderText="Supplier" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+    @*<GridColumn Field=@nameof(SupplierOrderHeader.OrderSubmitted) HeaderText="Final Submission" HeaderTextAlign="TextAlign.Center" EditType="EditType.BooleanEdit" TextAlign="TextAlign.Left" Width="100"></GridColumn>*@
+    </GridColumns>
+</SfGrid>
+
+@code {
+    #region Toasters
+    public static string ToastContent { get; set; }
+    SfToast ToastObj;
+    SfToast DeleteToastObj;
+    private string ToastPosition = "Right";
+    private int AlarmTimeout { get; set; } = 120000;
+    private List<ToastModel> Toast = new List<ToastModel>
+{
+        new ToastModel{ Title = "Warning!", Content=ToastContent, CssClass="e-toast-warning", Icon="e-warning toast-icons" },
+        new ToastModel{ Title = "Success!", Content=ToastContent, CssClass="e-toast-success", Icon="e-success toast-icons" },
+        new ToastModel{ Title = "Error!", Content=ToastContent, CssClass="e-toast-danger", Icon="e-error toast-icons" },
+        new ToastModel{ Title = "Information!", Content=ToastContent, CssClass="e-toast-info", Icon="e-info toast-icons" }
+    };
+    #endregion Toasters
+    private SfGrid<spStoreSupplierOrderHeaderResult> DefaultGrid;
+    private SfGrid<spViewStoreSupplierOrdersResult> OrderGrid;
+    public Syncfusion.Blazor.Grids.Action PreviousAction;
+    public Query ChildQuery = new Query();
+    private spStoreSupplierOrderHeaderResult ArtOrders { get; set; }
+    private List<AbasicUnit> BasicUnit { get; set; }
+    private List<AproductCategory> ProductCategory { get; set; }
+    private List<AproductSupplier> ProductSupplier { get; set; }
+    private List<ViewProduct> Product { get; set; }
+    private List<AOrderStatus> _OrderStatus { get; set; }
+    private bool Iscolumnvisible { get; set; }
+    private bool IscolumnEditable { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _OrderStatus = _context.AOrderStatuses/*.Where(o => o.OrderStatusId == 3 || o.OrderStatusId == 7)*/.ToList();
+            BasicUnit = _context.AbasicUnits.ToList();
+            ProductSupplier = _context.AproductSuppliers.ToList();
+            ProductCategory = _context.AproductCategories.ToList();
+            Product = _context.ViewProducts.ToList();
+            if (!userManagement.IsSignedIn())
+            {
+                Navigation.NavigateTo("Account/LoginPage", true);
+            }
+            if (await userManagement.IsInRole("Store Manager") || await userManagement.IsInRole("Administrator"))
+            {
+                Iscolumnvisible = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+    }
+    #region SupplierOrderDetails Header
+    public class StoreSupplierNewOrderAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        //private SupplierPdf exportService;
+        private UserManagement userManagement;
+        private Microsoft.JSInterop.IJSRuntime JS;
+        public StoreSupplierNewOrderAdapter(IToastService ts, Microsoft.JSInterop.IJSRuntime js, /*SupplierPdf pdf,*/ UserManagement _userManagement)
+        {
+            toastService = ts;
+            JS = js;
+            //exportService = pdf;
+            userManagement = _userManagement;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            try
+            {
+                var data = new List<spStoreSupplierOrderHeaderResult>();
+                using (var dbContext = new SPToCoreContext())
+                {
+                    if (await userManagement.IsInRole("Administrator") || await userManagement.IsInRole("Store Manager"))
+                    {
+                        data = await dbContext.spStoreSupplierOrderHeaderAsync(null,"1,2");
+                    }
+                    else if (await userManagement.IsInRole("Store Supervisor"))
+                    {
+                        data = await dbContext.spStoreSupplierOrderHeaderAsync(null, "1");
+                    }
+
+                }
+                IEnumerable GridData = data;
+                int _count = data.Count;
+                if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+                {
+                    // Searching
+                    GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+                }
+                if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+                {
+                    GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+                }
+                if (dataManagerRequest.Skip != 0)
+                {
+                    GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+                }
+                if (dataManagerRequest.Take != 0)
+                {
+                    GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+                }
+                IDictionary<string, object> aggregates = new Dictionary<string, object>();
+                if (dataManagerRequest.Aggregates != null) // Aggregation
+                {
+                    aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+                }
+                if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+                {
+                    foreach (var group in dataManagerRequest.Group)
+                    {
+                        GridData = DataUtil.Group<spStoreSupplierOrderHeaderResult>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                    }
+                }
+                return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+                return null;
+            }
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    int? previousvalue = 0;
+                    var val = (value as spStoreSupplierOrderHeaderResult);
+                    var exist = dbContext.SupplierOrderHeaders.FirstOrDefault(o => o.OrderNumber == val.OrderNumber);
+                    if (exist != null)
+                    {
+                        previousvalue = exist.OrderStatus;
+                        exist.OrderDate = val.OrderDate;
+                        if (exist.OrderStatus != 4)
+                        {
+                            if (val.SubmitOrder == true)
+                            {
+                                exist.OrderStatus = 2;
+                            }
+                            if (val.ConfirmSubmission == true)
+                            {
+                                exist.OrderStatus = 3;
+                            }
+                        }
+                        if (val.StockConfirm == true)
+                        {
+                            exist.OrderStatus = 5;
+                        }
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                    }
+                    else
+                    {
+                        DateTime date = DateTime.Now;
+                        SupplierOrderHeader order = new SupplierOrderHeader();
+                        order.OrderNumber = Guid.NewGuid().ToString();
+                        order.OrderDate = DateTime.Now;
+                        if (exist.OrderStatus != 4)
+                        {
+                            if (val.SubmitOrder == true)
+                            {
+                                order.OrderStatus = 2;
+                            }
+                            if (val.ConfirmSubmission == true)
+                            {
+                                order.OrderStatus = 3;
+                            }
+                        }
+                        if (val.StockConfirm == true)
+                        {
+                            order.OrderStatus = 5;
+                        }
+                        dbContext.SupplierOrderHeaders.Add(order);
+                    }
+                    await dbContext.SaveChangesAsync();
+
+                    //if (previousvalue == false && val.OrderConfirmed == true)
+                    //{
+                    //    using (MemoryStream excelStream = await exportService.StoreWarehouseOrderPDF(val.OrderNumber, val.SupplierId))
+                    //    {
+                    //        await JS.SaveAs("New Order.pdf", excelStream.ToArray());
+                    //    }
+                    //}
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            //int data = (int)value;
+            //var val = (value as SupplierOrderHeader);
+            //using (var dbContext = new SPToCoreContext())
+            //{
+            //    dbContext.SupplierOrderHeader.Remove(dbContext.SupplierOrderHeader.FirstOrDefault(o => o.FacilityCode == val.FacilityCode && o.ProductCode == val.ProductCode && o.BatchNo == val.BatchNo && o.DateOfPhysicalCount == val.DateOfPhysicalCount));
+            //    await dbContext.SaveChangesAsync();
+            //}
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as spStoreSupplierOrderHeaderResult);
+                    var exist = dbContext.SupplierOrderHeaders.FirstOrDefault(o => o.OrderNumber == val.OrderNumber);
+                    if (exist != null)
+                    {
+                        int? previousvalue = 0;
+                        previousvalue = exist.OrderStatus;
+                        if (exist.OrderStatus != 4)
+                        {
+                            if (val.SubmitOrder == true)
+                            {
+                                exist.OrderStatus = 2;
+                            }
+                            if (val.ConfirmSubmission == true)
+                            {
+                                exist.OrderStatus = 3;
+                            }
+                        }
+                        if (val.StockConfirm == true)
+                        {
+                            exist.OrderStatus = 5;
+                        }
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+
+                        //if (previousvalue == false && val.OrderConfirmed == true)
+                        //{
+                        //    using (MemoryStream excelStream = await exportService.StoreWarehouseOrderPDF(val.OrderNumber, val.SupplierId))
+                        //    {
+                        //        await JS.SaveAs("New Order.pdf", excelStream.ToArray());
+                        //    }
+                        //}
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+    }
+    public async void OnActionBegin(ActionEventArgs<spStoreSupplierOrderHeaderResult> args)
+    {
+        try
+        {
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+            {
+                PreviousAction = args.RequestType;
+                ChildQuery = new Query().AddParams("OrderNumber", args.RowData.OrderNumber).AddParams("SupplierId", args.RowData.SupplierId);
+                Iscolumnvisible = true;
+                IscolumnEditable = false;
+                //if (args.Data.OrderStatusId == 6)
+                //{
+                //    args.Data.OrderStatusId = 3;
+                //    using (var dbContext = new SPToCoreContext())
+                //    {
+                //        var data = dbContext.SupplierOrderHeader.FirstOrDefault(o => o.OrderNumber == args.Data.OrderNumber);
+                //        if (data != null)
+                //        {
+                //            data.OrderStatusId = 3;
+                //            dbContext.Entry(data).State = EntityState.Modified;
+                //            dbContext.SaveChanges();
+                //        }
+                //    }
+                //}
+            }
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+            {
+                PreviousAction = args.RequestType;
+                Iscolumnvisible = false;
+                IscolumnEditable = true;
+                DateTime today = DateTime.Now;
+                args.RowData.OrderDate = today;
+                //args.RowData.OrderSubmitted = false;
+                //args.RowData.OrderConfirmed = false;
+                args.RowData.Order_Status = 1;
+                args.RowData.OrderNumber = Guid.NewGuid().ToString();
+                ChildQuery = new Query().AddParams("OrderNumber", args.RowData.OrderNumber).AddParams("SupplierId", args.RowData.SupplierId);
+            }
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+            {
+                if (PreviousAction == Syncfusion.Blazor.Grids.Action.Add)
+                {
+                    using (var dbContext = new SPToCoreContext())
+                    {
+                        var exist = await dbContext.SupplierOrderDetails.Where(o => o.OrderNumber == args.Data.OrderNumber).ToListAsync();
+                        if (exist.Count == 0)
+                        {
+                            var data = dbContext.SupplierOrderHeaders.FirstOrDefault(o => o.OrderNumber == args.Data.OrderNumber);
+
+                            if (data != null)
+                            {
+                                dbContext.SupplierOrderHeaders.Remove(data);
+                                await dbContext.SaveChangesAsync();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+
+    }
+    public void OnSupplierChange(Syncfusion.Blazor.DropDowns.ChangeEventArgs<int?, AproductSupplier> args)
+    {
+        try
+        {
+            int val = Convert.ToInt32(args.Value);
+            Product = _context.ViewProducts.Where(o => o.SupplierId == val).ToList();
+
+            using (var dbContext = new SPToCoreContext())
+            {
+                var exists = dbContext.SupplierOrderHeaders.FirstOrDefault(o => o.OrderNumber == ArtOrders.OrderNumber);
+                if (exists != null)
+                {
+                    exists.OrderDate = ArtOrders.OrderDate;
+                    //exists.OrderSubmitted = ArtOrders.OrderSubmitted;
+                    //exists.OrderConfirmed = ArtOrders.OrderConfirmed;
+                    exists.OrderStatus = 1;
+                    exists.SupplierId = val;
+                    dbContext.Entry(exists).State = EntityState.Modified;
+                }
+                else
+                {
+                    SupplierOrderHeader order = new SupplierOrderHeader();
+                    order.OrderNumber = ArtOrders.OrderNumber;
+                    order.OrderDate = ArtOrders.OrderDate;
+                    //order.OrderSubmitted = ArtOrders.OrderSubmitted;
+                    //order.OrderConfirmed = ArtOrders.OrderConfirmed;
+                    order.OrderStatus = 1;
+                    order.SupplierId = val;
+                    dbContext.SupplierOrderHeaders.Add(order);
+                }
+                dbContext.SaveChanges();
+
+                ChildQuery = new Query().AddParams("OrderNumber", ArtOrders.OrderNumber).AddParams("SupplierId", ArtOrders.SupplierId);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+
+    }
+    #endregion SupplierOrderDetails Header
+
+    #region SupplierOrderDetails Details
+    public class StoreSupplierOrderDetailsAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        public StoreSupplierOrderDetailsAdapter(IToastService ts)
+        {
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            string OrderNumber = null;
+            int? SupplierId = null;
+            if (dataManagerRequest.Params != null && dataManagerRequest.Params.Count > 0)
+            {
+                var val = dataManagerRequest.Params;
+                OrderNumber = val.FirstOrDefault(o => o.Key == "OrderNumber").Value.ToString();
+                SupplierId = Convert.ToInt32(val.FirstOrDefault(o => o.Key == "SupplierId").Value);
+            }
+
+            var data = new List<spViewStoreSupplierOrdersResult>();
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.spViewStoreSupplierOrdersAsync(OrderNumber, SupplierId);
+                }
+                //for (int i = 1; i <= 20; i++)
+                //{
+                //    data.Add(new spViewStoreSupplierOrdersResult() { OrderNumber = OrderNumber, ItemId = Guid.NewGuid().ToString() });
+                //}
+
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            IEnumerable GridData = data;
+            int _count = data.Count;
+            if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+            {
+                // Searching
+                GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+            }
+            if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+            {
+                GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+            }
+            if (dataManagerRequest.Skip != 0)
+            {
+                GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+            }
+            if (dataManagerRequest.Take != 0)
+            {
+                GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+            }
+            IDictionary<string, object> aggregates = new Dictionary<string, object>();
+            if (dataManagerRequest.Aggregates != null) // Aggregation
+            {
+                aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+            }
+            if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+            {
+                foreach (var group in dataManagerRequest.Group)
+                {
+                    GridData = DataUtil.Group<spViewStoreSupplierOrdersResult>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                }
+            }
+            return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+        }
+        // Performs BatchUpdate operation
+        public override object BatchUpdate(DataManager dm, object Changed, object Added, object Deleted, string KeyField, string Key, int? dropIndex)
+        {
+            object value = null;
+            try
+            {
+                if (Added != null)
+                {
+                    var val = (List<spViewStoreSupplierOrdersResult>)Added;
+                    if (val.Count > 0)
+                    {
+                        Changed = Added;
+                        value = Added;
+                    }
+                    //foreach (var rec in (IEnumerable<SupplierOrderDetails>)Added)
+                    //{
+                    //    Orders.Add(rec);
+                    //}
+
+                }
+                if (Changed != null)
+                {
+                    value = Changed;
+
+                    using (var dbContext = new SPToCoreContext())
+                    {
+                        var val = (List<spViewStoreSupplierOrdersResult>)Changed;
+                        foreach (var n in val)
+                        {
+                            //var product = dbContext.Aproducts.FirstOrDefault(o => o.ProductCode == n.ProductCode);
+                            var exists = dbContext.SupplierOrderDetails.FirstOrDefault(o => o.OrderNumber == n.OrderNumber && o.ProductCode == n.ProductCode);
+                            if (exists != null)
+                            {
+                                //exists.ProductCode = n.ProductCode;
+                                //exists.Vintage = n.Vintage;
+                                exists.RemainingStock = n.RemainingStock;
+                                exists.QuantityOrderd = n.QuantityOrderd;
+                                exists.ListPrice = exists.ListPrice;
+                                exists.TotalPrice = (n.QuantityOrderd * exists.ListPrice);
+                                //exists.TotalQuantity = (exists.QuantityRecievedFromWareHouse + exists.RemainingBalance);
+                                dbContext.Entry(exists).State = EntityState.Modified;
+                            }
+                            else
+                            {
+                                SupplierOrderDetail details = new SupplierOrderDetail();
+                                details.ItemId = Guid.NewGuid().ToString();
+                                details.ProductCode = n.ProductCode;
+                                details.OrderNumber = n.OrderNumber;
+                                details.RemainingStock = n.RemainingStock;
+                                details.QuantityOrderd = n.QuantityOrderd;
+                                details.ListPrice = n.ListPrice;
+                                if(n.QuantityOrderd != null)
+                                {
+                                    details.TotalPrice = (n.QuantityOrderd * n.ListPrice);
+                                }
+                                dbContext.SupplierOrderDetails.Add(details);
+                            }
+                            dbContext.SaveChanges();
+                        }
+                    }
+
+
+
+                }
+                if (Deleted != null)
+                {
+                    //foreach (var rec in (IEnumerable<SupplierOrderDetails>)Deleted)
+                    //{
+                    //    Orders.Remove(Orders.Where(or => or.OrderID == rec.OrderID).FirstOrDefault());
+                    //}
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            return value;
+        }
+
+    }
+    public async void OnCellSaved()
+    {
+        await this.OrderGrid.EndEdit();
+        this.OrderGrid.Refresh();
+    }
+    public void OrderCellEditHandler(CellEditArgs<spViewStoreSupplierOrdersResult> args)
+    {
+        //if (args.RowData.RemainingStock == null)
+        //{
+        //    ToastObj.Show(new ToastModel { Title = "Error!", Content = "Please do a physical count for this product before ordering for it..", CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        //    args.Cancel = true;
+        //}
+        //if (args.ColumnName == "AddQuantity")
+        //{
+        //    if (args.RowData.QuantityRecieved == null)
+        //    {
+        //        args.Cancel = true;
+        //    }
+        //}
+        //if (args.ColumnName == "QuantityRecieved" && args.RowData.QuantityRecieved != null)
+        //{
+        //    args.Cancel = true;
+        //}
+    }
+    public async Task CellSelectHandler(CellSelectEventArgs<spViewStoreSupplierOrdersResult> args)
+    {
+        //get selected cell index
+        var CellIndexes = await OrderGrid.GetSelectedRowCellIndexes();
+
+        //get the row and cell index
+        var CurrentEditRowIndex = CellIndexes[0].Item1;
+        var CurrentEditCellIndex = (int)CellIndexes[0].Item2;
+
+        //get the available fields
+        var fields = await OrderGrid.GetColumnFieldNames();
+        // edit the selected cell using the cell index and column name
+        await OrderGrid.EditCell(CurrentEditRowIndex, fields[CurrentEditCellIndex]);
+    }
+    #endregion SupplierOrderDetails Details
+}
+

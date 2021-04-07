@@ -1,0 +1,228 @@
+﻿@page "/"
+@namespace Pharmacy.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = null;
+}
+@using Pharmacy.Data;
+@inject UserManagement userManagement;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pharmacy</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="Pharmacy.styles.css" rel="stylesheet" />
+    <link href="_content/Syncfusion.Blazor/styles/bootstrap4.css" rel="stylesheet" />
+    <link href="_content/Blazored.Toast/blazored-toast.css" rel="stylesheet" />
+    <style>
+        .e-grid.e-bothlines .e-rowcell {
+            border-width: 0px 1px 1px 0px;
+            border-color: lightgray;
+        }
+
+        .e-edit-dialog .e-gridform .e-table {
+            border-collapse: separate;
+            border-spacing: 1px;
+            width: 100%;
+            border-color: black;
+        }
+
+        .e-grid .e-gridheader /*For line that separates the grid header and content*/ {
+            border-bottom-color: #ea1b8d;
+            /*font-size: 12px;*/
+        }
+
+        .e-grid tr.e-hover /*For row hover*/ {
+            background-color: #e66aae;
+            color: #FFFFFF;
+            /*font-size: 12px;*/
+        }
+
+        .e-grid .e-alt_row /*For Alternate row color*/ {
+            background-color: #E5E4E2; /*#99CFE3;*/
+            /*font-size: 12px;*/
+        }
+
+        .e-grid .e-dialog .gridform .e-rowcell {
+            padding: .5em;
+            border-bottom: 1px solid #c8c8c8;
+            border-left: 1px solid #c8c8c8;
+            /*font-size: 12px;*/
+        }
+
+        .e-grid .e-headercell {
+            color: whitesmoke;
+            background-color: black;
+            font-family: Cambria;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .Category {
+            background-color: steelblue;
+            color: white;
+        }
+
+        .customCSS.e-rowcell {
+            background-color: #EFF5FB;
+            /*font-family: 'Bell MT';
+        font-style: italic;*/
+            /*color: whitesmoke;*/
+            /*font-size: 20px;*/
+            font: large bolder;
+            font-weight: bolder;
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
+</head>
+<body>
+    @*<component type="typeof(App)" render-mode="ServerPrerendered" />*@
+    <environment include="Staging,Production">
+        <component render-mode="ServerPrerendered" type="typeof(App)" />
+    </environment>
+    <environment include="Development">
+        <component render-mode="Server" type="typeof(App)" />
+    </environment>
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
+    <script src="_content/BlazorStrap/blazorStrap.js"></script>
+    <script src="_content/BlazorStrap/popper.min.js"></script>
+    <script src="~/js/jquery.min.js"></script>
+    @if (userManagement.IsSignedIn())
+    {
+        <footer>
+            <div class="container body-content" style="margin-right:1px;margin-left:2px;max-width: 98.5%; min-width: 98.5%;">
+                <hr />
+                <p>&copy; @DateTime.Now.Year -Pharmacy Point Of Sale <b style="float:right;"> @String.Format("{0 : dddd, MMMM d, yyyy}", DateTime.Now) </b></p>
+            </div>
+
+        </footer>
+
+    }
+    <script type="text/javascript">
+        function saveAsFile(filename, bytesBase64) {
+            if (navigator.msSaveBlob) {
+                //Download document in Edge browser
+                var data = window.atob(bytesBase64);
+                var bytes = new Uint8Array(data.length);
+                for (var i = 0; i < data.length; i++) {
+                    bytes[i] = data.charCodeAt(i);
+                }
+                var blob = new Blob([bytes.buffer], { type: "application/octet-stream" });
+                navigator.msSaveBlob(blob, filename);
+            }
+            else {
+                var link = document.createElement('a');
+                link.download = filename;
+                link.href = "data:application/octet-stream;base64," + bytesBase64;
+                document.body.appendChild(link); // Needed for Firefox
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+    </script>
+    <script>
+        $(function () {
+            $("body").on('click keypress', function () {
+                ResetThisSession();
+            });
+        });
+
+        var timeInSecondsAfterSessionOut = 1200; // change this to change session time out (in seconds).
+        var secondTick = 0;
+
+        function ResetThisSession() {
+            secondTick = 0;
+        }
+
+        function StartThisSessionTimer() {
+            secondTick++;
+            var timeLeft = ((timeInSecondsAfterSessionOut - secondTick) / 60).toFixed(0); // in minutes
+            timeLeft = timeInSecondsAfterSessionOut - secondTick; // override, we have 30 secs only
+
+            //$("#spanTimeLeft").html(timeLeft);
+            //console.log(timeLeft);
+            if (secondTick > timeInSecondsAfterSessionOut) {
+                clearTimeout(tick);
+                window.location = "/Account/LoginPage";
+                return;
+            }
+            tick = setTimeout("StartThisSessionTimer()", 1000);
+        }
+
+        StartThisSessionTimer();
+    </script>
+    <script>
+        window.Login = (username, password, remeberme) => {
+            var _data = {
+                Email: username,
+                Password: password,
+                RememberMe: remeberme
+            };
+            //alert(window.location.protocol+"//"+window.location.hostname + ":" + window.location.port);
+            //var url = "https://localhost:44356/api/LoginAPI";
+            var url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + "/api/LoginAPI";
+            $.ajax({
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                type: 'POST',
+                data: JSON.stringify(_data),
+                success: function (data) {
+
+                    if (data.succeeded == true) {
+                        window.location = "/Index";
+                    }
+                    else if (data.isLockedOut == true) {
+
+                    }
+                    else if (data.isNotAllowed == true) {
+
+                    }
+                    else if (data.requiresTwoFactor == true) {
+
+                    }
+                    return data;
+                },
+                fail: function (xhr, status, error) {
+                    // error handling
+                    return null;
+                },
+            });
+        };
+        function Logout() {
+            var url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + "/api/LoginAPI";
+            $.ajax({
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                type: 'GET',
+                //data: JSON.stringify(_data),
+                success: function (data) {
+                    window.location = "/Account/LoginPage";
+                    //return data;
+                },
+                fail: function (xhr, status, error) {
+                    // error handling
+                    alert(status);
+                },
+            });
+        }
+    </script>
+</body>
+</html>

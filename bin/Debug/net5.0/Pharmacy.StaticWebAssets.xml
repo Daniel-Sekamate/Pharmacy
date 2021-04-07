@@ -1,0 +1,7 @@
+﻿<StaticWebAssets Version="1.0">
+  <ContentRoot BasePath="/" Path="D:\CoreProjects\Pharmacy\obj\Debug\net5.0\scopedcss\bundle\" />
+  <ContentRoot BasePath="/Identity" Path="C:\Users\wokwe\.nuget\packages\microsoft.aspnetcore.identity.ui\5.0.4\staticwebassets\V4\" />
+  <ContentRoot BasePath="_content/Blazored.Toast" Path="C:\Users\wokwe\.nuget\packages\blazored.toast\3.1.2\build\..\staticwebassets\" />
+  <ContentRoot BasePath="_content/BlazorStrap" Path="C:\Users\wokwe\.nuget\packages\blazorstrap\1.5.1\build\..\staticwebassets\" />
+  <ContentRoot BasePath="_content/Syncfusion.Blazor" Path="C:\Users\wokwe\.nuget\packages\syncfusion.blazor\18.4.0.48\build\..\staticwebassets\" />
+</StaticWebAssets>

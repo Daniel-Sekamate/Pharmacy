@@ -1,0 +1,136 @@
+﻿@inherits LayoutComponentBase;
+@inject IBootstrapCss BootstrapCss;
+@using Pharmacy.Data;
+@inject UserManagement userManagement;
+
+<style>
+    .e-grid.e-bothlines .e-rowcell {
+        border-width: 0px 1px 1px 0px;
+        border-color: lightgray;
+    }
+
+    .e-edit-dialog .e-gridform .e-table {
+        border-collapse: separate;
+        border-spacing: 1px;
+        width: 100%;
+        border-color: black;
+    }
+
+    .e-grid .e-gridheader /*For line that separates the grid header and content*/ {
+        border-bottom-color: #ea1b8d;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid tr.e-hover /*For row hover*/ {
+        background-color: #e66aae;
+        color: #FFFFFF;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-alt_row /*For Alternate row color*/ {
+        background-color: #E5E4E2; /*#99CFE3;*/
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-dialog .gridform .e-rowcell {
+        padding: .5em;
+        border-bottom: 1px solid #c8c8c8;
+        border-left: 1px solid #c8c8c8;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-headercell {
+        color: whitesmoke;
+        background-color: black;
+        font-family: Cambria;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .Category {
+        background-color: steelblue;
+        color: white;
+    }
+
+    .customCSS.e-rowcell {
+        background-color: #EFF5FB;
+        /*font-family: 'Bell MT';
+        font-style: italic;*/
+        /*color: whitesmoke;*/
+        /*font-size: 20px;*/
+        font: large bolder;
+        font-weight: bolder;
+        font-family: 'Times New Roman', Times, serif;
+    }
+
+    .my-top-row {
+        height: 3.5rem;
+        display: block;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #f7f7f7;
+        border-bottom: 1px solid #d6d5d5;
+    }
+
+    .main .my-top-row > a, .main .my-top-row .btn-link {
+        white-space: nowrap;
+        margin-left: 1.5rem;
+        float: right;
+        margin-top: 2vh;
+    }
+
+    a, .btn-link {
+        color: black;
+        font-size: large;
+        font-family: cambria;
+    }
+</style>
+
+<BlazoredToasts Position="Blazored.Toast.Configuration.ToastPosition.TopRight"
+                Timeout="10"
+                IconType="Blazored.Toast.IconType.FontAwesome"
+                SuccessClass="success-toast-override"
+                SuccessIcon="fa fa-check"
+                ErrorIcon="fa fa-times"
+                InfoIcon="fa fa-info"
+                WarningIcon="fa fa-warning" />
+<div class="main">
+    @if (userManagement.IsSignedIn())
+    {
+        <div class="my-top-row">
+            <div style="float: left; align-items: center; margin-top: 2vh;">
+                <_Layout />
+            </div>
+            <div style="float: right; align-items: center; margin-top: 2vh;">
+                <LoginDisplay />
+            </div>
+        </div>
+    }
+
+    <div class="content px-4">
+        @Body
+    </div>
+</div>
+
+@code{
+    private bool isServerSide = false;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await BootstrapCss.SetBootstrapCss("4.3.1");
+        }
+        catch (Exception)
+        {
+
+            isServerSide = true;
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRun)
+    {
+        if (isServerSide && firstRun)
+        {
+            await BootstrapCss.SetBootstrapCss("4.3.1");
+        }
+    }
+}

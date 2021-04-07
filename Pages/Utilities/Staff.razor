@@ -1,0 +1,678 @@
+﻿@page "/Utilities/Staff"
+@using Microsoft.AspNetCore.Hosting;
+@using Microsoft.Extensions.DependencyInjection
+@using Pharmacy.Models;
+@using System.Collections;
+@using Microsoft.EntityFrameworkCore;
+@using Microsoft.AspNetCore.Components;
+@using Syncfusion.Blazor.Data;
+@inject PharmacyContext _context;
+@using System.IO;
+@inject IWebHostEnvironment hostingEnv;
+@inject NavigationManager Navigation;
+@using Pharmacy.Data;
+@inject UserManagement userManagement;
+<style>
+    .e-edit-dialog {
+        max-height: 98%;
+        max-width: 100%;
+        min-width: 98%;
+        min-height: 95%;
+    }
+
+    .e-grid.e-bothlines .e-rowcell {
+        border-width: 0px 1px 1px 0px;
+        border-color: lightgray;
+    }
+
+    .e-edit-dialog .e-gridform .e-table {
+        border-collapse: separate;
+        border-spacing: 1px;
+        width: 100%;
+        border-color: black;
+    }
+
+    .e-grid .e-gridheader /*For line that separates the grid header and content*/ {
+        border-bottom-color: #ea1b8d;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid tr.e-hover /*For row hover*/ {
+        background-color: #e66aae;
+        color: #FFFFFF;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-alt_row /*For Alternate row color*/ {
+        background-color: #E5E4E2; /*#99CFE3;*/
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-dialog .gridform .e-rowcell {
+        padding: .5em;
+        border-bottom: 1px solid #c8c8c8;
+        border-left: 1px solid #c8c8c8;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-headercell {
+        color: whitesmoke;
+        background-color: black;
+        font-family: Cambria;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .Category {
+        background-color: steelblue;
+        color: white;
+    }
+
+    .customCSS.e-rowcell {
+        background-color: #EFF5FB;
+        /*font-family: 'Bell MT';
+        font-style: italic;*/
+        /*color: whitesmoke;*/
+        /*font-size: 20px;*/
+        font: large bolder;
+        font-weight: bolder;
+        font-family: 'Times New Roman', Times, serif;
+    }
+</style>
+<ol class="breadcrumb" style="margin-top:5px;">
+    <li class="breadcrumb-item active" style="width: 100%; background-color: black; color: white; font-family: Cambria; padding: 5px; font: bolder;"> <stong> Staff Utilities </stong></li>
+</ol>
+<div class="row">
+    <div class="col-lg-12 control-section">
+        <SfToast @ref="ToastObj" ID="toast_type">
+            <ToastPosition X="@ToastPosition"></ToastPosition>
+        </SfToast>
+    </div>
+</div>
+
+<SfTab ID="Ej2Tab" Width="100%">
+    <TabItems>
+        <TabItem>
+            <ChildContent>
+                <TabHeader Text="Staff Role"></TabHeader>
+            </ChildContent>
+            <ContentTemplate>
+                <SfGrid @ref="StaffRoleGrid" TValue="AstaffRole"
+                        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" AllowGrouping="false" ShowColumnChooser="true" AllowTextWrap="true"
+                        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+                    @*<GridGroupSettings Columns="@GroupedColumns"></GridGroupSettings>*@
+                    <SfDataManager AdaptorInstance="@typeof(StaffRoleAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+                    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+                    <GridEvents OnActionBegin="OnStaffRoleActionBegin" TValue="AstaffRole"></GridEvents>
+                    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+                        <Template>
+                            @{
+                                var proCat = (context as AstaffRole);
+                                <div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-12">
+                                            <SfTextBox ID="StaffRoleId" @bind-Value="@(proCat.StaffRoleId)" Placeholder="Staff Role Id" Enabled="false" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <SfTextBox Multiline="true" ID="StaffRole" @bind-Value="@(proCat.StaffRole)" Placeholder="Role Name" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </Template>
+                    </GridEditSettings>
+                    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                    <GridPageSettings PageSize="20"></GridPageSettings>
+                    <GridColumns>
+                        <GridColumn Type="ColumnType.CheckBox" Width="20"></GridColumn>
+                        <GridColumn Field=@nameof(AstaffRole.StaffRoleId) HeaderText="Staff Role Id" TextAlign="TextAlign.Left" IsPrimaryKey="true" IsIdentity="true" Visible="true" Width="50"></GridColumn>
+                        <GridColumn Field=@nameof(AstaffRole.StaffRole) HeaderText="Role Name" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </ContentTemplate>
+        </TabItem>
+        <TabItem>
+            <ChildContent>
+                <TabHeader Text="Staff"></TabHeader>
+            </ChildContent>
+            <ContentTemplate>
+                <SfGrid @ref="StaffGrid" TValue="AStaff"
+                        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" AllowGrouping="false" ShowColumnChooser="true" AllowTextWrap="true"
+                        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+                    @*<GridGroupSettings Columns="@GroupedColumns"></GridGroupSettings>*@
+                    <SfDataManager AdaptorInstance="@typeof(StaffAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+                    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+                    <GridEvents OnActionBegin="OnStaffActionBegin" TValue="AStaff"></GridEvents>
+                    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+                        <Template>
+                            @{
+                                StaffData = (context as AStaff);
+                                <div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="StaffId" @bind-Value="@(StaffData.StaffId)" Placeholder="Staff Id" Enabled="false" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="false" ID="StaffName" @bind-Value="@(StaffData.StaffName)" Placeholder="Staff Name" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="false" ID="Email" @bind-Value="@(StaffData.Email)" Placeholder="Email" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfDropDownList ID="NationalityId" @bind-Value="@(StaffData.NationalityId)" Enabled="true" TItem="ACountry" TValue="string" DataSource="@_Country" Placeholder="Nationality" FloatLabelType="FloatLabelType.Always">
+                                                <DropDownListFieldSettings Value="@nameof(ACountry.CountryCode)" Text="@nameof(ACountry.CountryName)"></DropDownListFieldSettings>
+                                            </SfDropDownList>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfDropDownList ID="GenderId" @bind-Value="@(StaffData.GenderId)" Enabled="true" TItem="Agender" TValue="int?" DataSource="@_gender" Placeholder="Gender" FloatLabelType="FloatLabelType.Always">
+                                                <DropDownListFieldSettings Value="@nameof(Agender.GenderId)" Text="@nameof(Agender.GenderName)"></DropDownListFieldSettings>
+                                            </SfDropDownList>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfDropDownList ID="StaffRoleId" @bind-Value="@(StaffData.StaffRoleId)" Enabled="true" TItem="AstaffRole" TValue="string" DataSource="@_staffRole" Placeholder="Staff Role" FloatLabelType="FloatLabelType.Always">
+                                                <DropDownListFieldSettings Value="@nameof(AstaffRole.StaffRoleId)" Text="@nameof(AstaffRole.StaffRole)"></DropDownListFieldSettings>
+                                            </SfDropDownList>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfDatePicker ID="Dob" @bind-Value="@(StaffData.Dob)" Placeholder="Date of Birth" Format="d" FloatLabelType="FloatLabelType.Always"></SfDatePicker>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="false" ID="NinNumber" @bind-Value="@(StaffData.NinNumber)" Placeholder="Nin Number/ Passport Number" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="false" ID="Phone" @bind-Value="@(StaffData.Phone)" Placeholder="Tele 1" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="false" ID="Tele" @bind-Value="@(StaffData.Tele)" Placeholder="Tele 2" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="false" ID="City" @bind-Value="@(StaffData.City)" Placeholder="City" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="false" ID="Town" @bind-Value="@(StaffData.Town)" Placeholder="Town" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6" style="padding-top:25px;">
+                                                    <b>Is Active?</b>
+                                                </div>
+                                                <div class="form-group col-md-6" style="transform:scale(2);padding-top:20px;">
+                                                    @if (StaffData.IsActive == true)
+                                                    {
+                                                        <input type="checkbox" id="IsActive" @bind-value="@StaffData.IsActive" name="IsActive" checked="checked" class="e-field e-checkbox" style="width:30px" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="checkbox" id="IsActive" @bind-value="@StaffData.IsActive" name="IsActive" class="e-field e-checkbox" style="width:30px" />
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <p>
+                                                Upload Image
+                                            </p>
+                                            <SfUploader AutoUpload="false" AllowMultiple="false" AllowedExtensions=".jpeg,.png,.jpg">
+                                                <UploaderEvents ValueChange="OnFileUploadChange"></UploaderEvents>
+                                            </SfUploader>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </Template>
+                    </GridEditSettings>
+                    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                    <GridPageSettings PageSize="20"></GridPageSettings>
+                    <GridColumns>
+                        <GridColumn Type="ColumnType.CheckBox" Width="20"></GridColumn>
+                        <GridColumn Field=@nameof(AStaff.StaffId) HeaderText="Staff Id" TextAlign="TextAlign.Left" IsPrimaryKey="true" IsIdentity="true" Visible="false" Width="50"></GridColumn>
+                        <GridColumn Field=@nameof(AStaff.StaffRoleId) HeaderText="Staff Role" Width="100" EditType="EditType.DropDownEdit" ForeignKeyField="@nameof(AstaffRole.StaffRoleId)" ForeignKeyValue="@nameof(AstaffRole.StaffRole)" DataSource="@_staffRole"></GridColumn>
+                        <GridColumn Field=@nameof(AStaff.StaffName) HeaderText="Staff Name" TextAlign="TextAlign.Left" Width="180"></GridColumn>
+                        <GridColumn Field=@nameof(AStaff.Email) HeaderText="Email" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AStaff.Phone) HeaderText="Tele 1" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AStaff.GenderId) HeaderText="Gender" TextAlign="TextAlign.Left" Width="100" EditType="EditType.DropDownEdit" ForeignKeyField="@nameof(Agender.GenderId)" ForeignKeyValue="@nameof(Agender.GenderName)" DataSource="@_gender"></GridColumn>
+                        <GridColumn Field=@nameof(AStaff.NationalityId) HeaderText="Nationality" TextAlign="TextAlign.Left" Width="100" EditType="EditType.DropDownEdit" ForeignKeyField="@nameof(ACountry.CountryCode)" ForeignKeyValue="@nameof(ACountry.CountryName)" DataSource="@_Country"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </ContentTemplate>
+        </TabItem>
+    </TabItems>
+</SfTab>
+
+
+@code {
+    #region Toasters
+    public static string ToastContent { get; set; }
+    SfToast ToastObj;
+    SfToast DeleteToastObj;
+    private string ToastPosition = "Right";
+    private int AlarmTimeout { get; set; } = 120000;
+    private List<ToastModel> Toast = new List<ToastModel>
+{
+        new ToastModel{ Title = "Warning!", Content=ToastContent, CssClass="e-toast-warning", Icon="e-warning toast-icons" },
+        new ToastModel{ Title = "Success!", Content=ToastContent, CssClass="e-toast-success", Icon="e-success toast-icons" },
+        new ToastModel{ Title = "Error!", Content=ToastContent, CssClass="e-toast-danger", Icon="e-error toast-icons" },
+        new ToastModel{ Title = "Information!", Content=ToastContent, CssClass="e-toast-info", Icon="e-info toast-icons" }
+    };
+    #endregion Toasters
+
+    private SfGrid<AstaffRole> StaffRoleGrid;
+    private SfGrid<AStaff> StaffGrid;
+    public AStaff StaffData { get; set; }
+    public Syncfusion.Blazor.Grids.Action PreviousAction;
+    private List<AstaffRole> _staffRole { get; set; }
+    private List<Agender> _gender { get; set; }
+    private List<ACountry> _Country { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (!userManagement.IsSignedIn())
+            {
+                Navigation.NavigateTo("Account/LoginPage", true);
+            }
+            _staffRole = _context.AstaffRoles.ToList();
+            _gender = _context.Agenders.ToList();
+            _Country = _context.ACountries.ToList();
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+    }
+
+    #region Staff Role DataSource
+    public class StaffRoleAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        public StaffRoleAdapter(IToastService ts)
+        {
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            var data = new List<AstaffRole>();
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.AstaffRoles.OrderBy(o => o.StaffRole).ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            IEnumerable GridData = data;
+            int _count = data.Count;
+            if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+            {
+                // Searching
+                GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+            }
+            if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+            {
+                GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+            }
+            if (dataManagerRequest.Skip != 0)
+            {
+                GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+            }
+            if (dataManagerRequest.Take != 0)
+            {
+                GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+            }
+            IDictionary<string, object> aggregates = new Dictionary<string, object>();
+            if (dataManagerRequest.Aggregates != null) // Aggregation
+            {
+                aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+            }
+            if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+            {
+                foreach (var group in dataManagerRequest.Group)
+                {
+                    GridData = DataUtil.Group<AstaffRole>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                }
+            }
+            return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AstaffRole);
+                    val.StaffRoleId = Guid.NewGuid().ToString();
+                    dbContext.AstaffRoles.Add(val);
+                    await dbContext.SaveChangesAsync();
+                    toastService.ShowSuccess(val.StaffRole + " has been saved successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                int data = (int)value;
+                var val = (value as AstaffRole);
+                using (var dbContext = new SPToCoreContext())
+                {
+                    // dbContext.AphysicalCount.Remove(dbContext.AphysicalCount.FirstOrDefault(o => o.PhysicalCountId == val.PhysicalCountId));
+                    // await dbContext.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AstaffRole);
+                    var exist = dbContext.AstaffRoles.FirstOrDefault(o => o.StaffRoleId == val.StaffRoleId);
+                    if (exist != null)
+                    {
+                        exist.StaffRole = val.StaffRole;
+
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+                        toastService.ShowSuccess(val.StaffRole + " has been updated successfully.");
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            return value;
+        }
+    }
+    public void OnStaffRoleActionBegin(ActionEventArgs<AstaffRole> args)
+    {
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+        {
+
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+        {
+
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+        {
+
+        }
+        //if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+        //{
+        //    this.OrderGrid.EndEdit();
+        //}
+    }
+    #endregion Staff Role DataSource
+    #region Staff DataSource
+    public class StaffAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        public StaffAdapter(IToastService ts)
+        {
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            var data = new List<AStaff>();
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.AStaffs.OrderBy(o => o.StaffName).ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            IEnumerable GridData = data;
+            int _count = data.Count;
+            if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+            {
+                // Searching
+                GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+            }
+            if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+            {
+                GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+            }
+            if (dataManagerRequest.Skip != 0)
+            {
+                GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+            }
+            if (dataManagerRequest.Take != 0)
+            {
+                GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+            }
+            IDictionary<string, object> aggregates = new Dictionary<string, object>();
+            if (dataManagerRequest.Aggregates != null) // Aggregation
+            {
+                aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+            }
+            if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+            {
+                foreach (var group in dataManagerRequest.Group)
+                {
+                    GridData = DataUtil.Group<AStaff>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                }
+            }
+            return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AStaff);
+
+                    var exist = dbContext.AStaffs.FirstOrDefault(o => o.StaffId == val.StaffId);
+                    if (exist != null)
+                    {
+                        exist.StaffName = val.StaffName;
+                        exist.StaffRoleId = val.StaffRoleId;
+                        exist.GenderId = val.GenderId;
+                        exist.Email = val.Email;
+                        exist.Dob = val.Dob;
+                        exist.NationalityId = val.NationalityId;
+                        exist.Phone = val.Phone;
+                        exist.Tele = val.Tele;
+                        exist.City = val.City;
+                        exist.Town = val.Town;
+                        exist.NinNumber = val.NinNumber;
+                        exist.IsActive = val.IsActive;
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                    }
+                    else
+                    {
+                        val.StaffId = Guid.NewGuid().ToString();
+                        dbContext.AStaffs.Add(val);
+                    }
+                    await dbContext.SaveChangesAsync();
+                    toastService.ShowSuccess(val.StaffName + " has been saved successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                int data = (int)value;
+                var val = (value as AStaff);
+                //using (var dbContext = new SPToCoreContext())
+                //{
+                //    dbContext.AphysicalCount.Remove(dbContext.AphysicalCount.FirstOrDefault(o => o.PhysicalCountId == val.PhysicalCountId));
+                //    await dbContext.SaveChangesAsync();
+                //}
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AStaff);
+                    var exist = dbContext.AStaffs.FirstOrDefault(o => o.StaffId == val.StaffId);
+                    if (exist != null)
+                    {
+                        exist.StaffName = val.StaffName;
+                        exist.StaffRoleId = val.StaffRoleId;
+                        exist.GenderId = val.GenderId;
+                        exist.Email = val.Email;
+                        exist.Dob = val.Dob;
+                        exist.NationalityId = val.NationalityId;
+                        exist.Phone = val.Phone;
+                        exist.Tele = val.Tele;
+                        exist.City = val.City;
+                        exist.Town = val.Town;
+                        exist.NinNumber = val.NinNumber;
+                        exist.IsActive = val.IsActive;
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            return value;
+        }
+    }
+    public async void OnStaffActionBegin(ActionEventArgs<AStaff> args)
+    {
+        try
+        {
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+            {
+                PreviousAction = args.RequestType;
+                _staffRole = _context.AstaffRoles.ToList();
+            }
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+            {
+                PreviousAction = args.RequestType;
+                _staffRole = _context.AstaffRoles.ToList();
+                args.RowData.StaffId = Guid.NewGuid().ToString();
+                args.RowData.IsActive = true;
+                using (var dbContext = new SPToCoreContext())
+                {
+                    dbContext.AStaffs.Add(args.RowData);
+                    dbContext.SaveChanges();
+                }
+            }
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+            {
+                if (PreviousAction == Syncfusion.Blazor.Grids.Action.Add)
+                {
+                    using (var dbContext = new SPToCoreContext())
+                    {
+                        var exist = dbContext.AstaffImages.FirstOrDefault(o => o.StaffId == args.RowData.StaffId);
+                        if (exist != null)
+                        {
+                            dbContext.AstaffImages.Remove(exist);
+                            dbContext.SaveChanges();
+                        }
+                        dbContext.AStaffs.Remove(args.RowData);
+                        dbContext.SaveChanges();
+                    }
+                }
+            }
+            //if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+            //{
+            //    this.OrderGrid.EndEdit();
+            //}
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+    }
+    private async void OnFileUploadChange(UploadChangeEventArgs args)
+    {
+        try
+        {
+            foreach (var file in args.Files)
+            {
+                var path = hostingEnv.WebRootPath + $@"\StaffImages\{file.FileInfo.Name}";
+                //var path = @"path" + file.FileInfo.Name;
+                if (!System.IO.File.Exists(path))
+                {
+                    FileStream filestream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
+                    file.Stream.WriteTo(filestream);
+                    filestream.Close();
+                    file.Stream.Close();
+                    FileStream fs = System.IO.File.Create(path);
+                    BinaryReader br = new BinaryReader(fs); //reads the binary files
+                    Byte[] bytes = br.ReadBytes((Int32)fs.Length); //counting the file length into bytes
+                    using (var dbContext = new SPToCoreContext())
+                    {
+                        var exist = dbContext.AstaffImages.FirstOrDefault(o => o.StaffId == StaffData.StaffId);
+                        if (exist != null)
+                        {
+                            exist.ImageName = file.FileInfo.Name;
+                            exist.ImageType = Path.GetExtension(file.FileInfo.Name);
+                            exist.StaffImage = bytes;
+                            dbContext.Entry(exist).State = EntityState.Modified;
+                        }
+                        else
+                        {
+                            AstaffImage m = new AstaffImage();
+                            m.StaffId = StaffData.StaffId;
+                            m.ImageName = file.FileInfo.Name;
+                            m.ImageType = Path.GetExtension(file.FileInfo.Name);
+                            m.StaffImage = bytes;
+                            dbContext.AstaffImages.Add(m);
+                        }
+                        dbContext.SaveChanges();
+                    }
+                }
+                //Save infor into the DB
+            }
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+    }
+    #endregion Staff DataSource
+}
+

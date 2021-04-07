@@ -1,0 +1,365 @@
+﻿@page "/Ordering/PhysicalCount";
+@using Pharmacy.Models;
+@using System.Collections;
+@using Microsoft.EntityFrameworkCore;
+@using Syncfusion.Blazor.Data;
+@inject PharmacyContext context;
+@inject NavigationManager Navigation;
+@using Pharmacy.Data;
+@inject UserManagement userManagement;
+<style>
+    .e-edit-dialog {
+        max-height: 98%;
+        max-width: 100%;
+        min-width: 98%;
+        min-height: 95%;
+    }
+
+    .e-grid.e-bothlines .e-rowcell {
+        border-width: 0px 1px 1px 0px;
+        border-color: lightgray;
+    }
+
+    .e-edit-dialog .e-gridform .e-table {
+        border-collapse: separate;
+        border-spacing: 1px;
+        width: 100%;
+        border-color: black;
+    }
+
+    .e-grid .e-gridheader /*For line that separates the grid header and content*/ {
+        border-bottom-color: #ea1b8d;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid tr.e-hover /*For row hover*/ {
+        background-color: #e66aae;
+        color: #FFFFFF;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-alt_row /*For Alternate row color*/ {
+        background-color: #E5E4E2; /*#99CFE3;*/
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-dialog .gridform .e-rowcell {
+        padding: .5em;
+        border-bottom: 1px solid #c8c8c8;
+        border-left: 1px solid #c8c8c8;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-headercell {
+        color: whitesmoke;
+        background-color: black;
+        font-family: Cambria;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .Category {
+        background-color: steelblue;
+        color: white;
+    }
+
+    .customCSS.e-rowcell {
+        background-color: #EFF5FB;
+        /*font-family: 'Bell MT';
+        font-style: italic;*/
+        /*color: whitesmoke;*/
+        /*font-size: 20px;*/
+        font: large bolder;
+        font-weight: bolder;
+        font-family: 'Times New Roman', Times, serif;
+    }
+</style>
+<ol class="breadcrumb" style="margin-top:5px;">
+    <li class="breadcrumb-item active" style="width: 100%; background-color: black; color: white; font-family: Cambria; padding: 5px; font: bolder;"> <stong> Physical Count </stong></li>
+</ol>
+<div class="row">
+    <div class="col-lg-12 control-section">
+        <SfToast @ref="ToastObj" ID="toast_type">
+            <ToastPosition X="@ToastPosition"></ToastPosition>
+        </SfToast>
+    </div>
+</div>
+<SfGrid @ref="DefaultGrid" TValue="ProductPhysicalCount"
+        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" AllowGrouping="true" ShowColumnChooser="true" AllowTextWrap="true"
+        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+    <GridGroupSettings Columns="@GroupedColumns"></GridGroupSettings>
+    <SfDataManager AdaptorInstance="@typeof(PhysicalCountAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+    <GridEvents OnActionBegin="OnActionBegin" TValue="ProductPhysicalCount"></GridEvents>
+    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+        <Template>
+            @{
+                PhysicalcountData = (context as ProductPhysicalCount);
+                <div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <SfDropDownList ID="ProductCode" @bind-Value="@(PhysicalcountData.ProductCode)" Enabled="true" TItem="ViewProduct" TValue="double" DataSource="@Product" Placeholder="Product" FloatLabelType="FloatLabelType.Always">
+                                            <DropDownListEvents TItem="ViewProduct" TValue="double" ValueChange="OnProductChange"></DropDownListEvents>
+                                            <DropDownListFieldSettings GroupBy="@nameof(ViewProduct.CategoryDescription)" Value="ProductCode" Text="ProductDescription"></DropDownListFieldSettings>
+                                        </SfDropDownList>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <SfDatePicker ID="PhysicalCountDate" @bind-Value="@(PhysicalcountData.PhysicalCountDate)" Enabled="true" Placeholder="Date Of Physical Count" FloatLabelType="FloatLabelType.Always"></SfDatePicker>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        @*<SfTextBox ID="BatchNo" @bind-Value="@(PhysicalcountData.BatchNo)" Placeholder="Batch Number" FloatLabelType="FloatLabelType.Always"></SfTextBox>*@
+                                        <SfDropDownList ID="BatchNo" @bind-Value="@(PhysicalcountData.BatchNo)" Enabled="true" TItem="ViewBatchNo" TValue="string" DataSource="@BatchNo" Placeholder="Batch No" FloatLabelType="FloatLabelType.Always">
+                                            <DropDownListFieldSettings Value="@nameof(ViewBatchNo.BatchNo)" Text="@nameof(ViewBatchNo.BatchNo)"></DropDownListFieldSettings>
+                                        </SfDropDownList>
+                                    </div>
+                                    @*<div class="form-group col-md-6">
+            <SfNumericTextBox ID="SystemCount" @bind-Value="@(PhysicalcountData.SystemCount)" Format="N2" Placeholder="System Count" Enabled="false" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+        </div>*@
+                                    <div class="form-group col-md-6">
+                                        <SfNumericTextBox ID="QuantityatPharmacy" @bind-Value="@(PhysicalcountData.QuantityatPharmacy)" OnChange="@OnquantityChange" Format="N2" Placeholder="Quantity at Pharmacy" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <SfNumericTextBox ID="QuantityatStore" @bind-Value="@(PhysicalcountData.QuantityatStore)" OnChange="@OnquantityChange" Format="N2" Placeholder="Quantity at Store" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <SfNumericTextBox ID="Total" @bind-Value="@(PhysicalcountData.Total)" Enabled="false" Format="N2" Placeholder="Total" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                    </div>
+                                </div>
+                </div>
+            }
+        </Template>
+    </GridEditSettings>
+    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+    <GridPageSettings PageSize="20"></GridPageSettings>
+    <GridColumns>
+        <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+        <GridColumn Field=@nameof(ProductPhysicalCount.PhysicalCountId) HeaderText="Physical Count Id" TextAlign="TextAlign.Left" IsPrimaryKey="true" IsIdentity="true" Visible="false" Width="100"></GridColumn>
+        <GridColumn Field=@nameof(ProductPhysicalCount.PhysicalCountDate) HeaderText="Date Of Physical Count" Format="d" EditType="EditType.DatePickerEdit" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+        <GridColumn Field=@nameof(ProductPhysicalCount.ProductCode) HeaderText="Product Code" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+        <GridColumn Field=@nameof(ProductPhysicalCount.ProductCode) HeaderText="Product" Width="180" ForeignKeyField="@nameof(Aproduct.ProductCode)" ForeignKeyValue="@nameof(Aproduct.ProductDescription)" DataSource="@Product"></GridColumn>
+        <GridColumn Field=@nameof(ProductPhysicalCount.BatchNo) HeaderText="Batch No" Visible="true" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+        <GridColumn Field=@nameof(ProductPhysicalCount.QuantityatPharmacy) HeaderText="Quantity at Pharmacy" Visible="true" AllowEditing="false" ShowInColumnChooser="true" EditType="EditType.NumericEdit" Format="N2" Width="100"></GridColumn>
+        <GridColumn Field=@nameof(ProductPhysicalCount.QuantityatStore) HeaderText="Quantity at Store" AllowEditing="false" ShowInColumnChooser="true" EditType="EditType.NumericEdit" Format="N2" Width="100"></GridColumn>
+        @*<GridColumn Field=@nameof(ProductPhysicalCount.ExpiryDate) HeaderText="Expiry Date" Visible="false" Format="d" EditType="EditType.DatePickerEdit" TextAlign="TextAlign.Left" Width="100"></GridColumn>*@
+        <GridColumn Field=@nameof(ProductPhysicalCount.Total) HeaderText="Total" AllowEditing="false" ShowInColumnChooser="true" EditType="EditType.NumericEdit" Format="N2" Width="100"></GridColumn>
+    </GridColumns>
+</SfGrid>
+@code {
+        #region Toasters
+    public static string ToastContent { get; set; }
+    SfToast ToastObj;
+    SfToast DeleteToastObj;
+    private string ToastPosition = "Right";
+    private int AlarmTimeout { get; set; } = 120000;
+    private List<ToastModel> Toast = new List<ToastModel>
+{
+        new ToastModel{ Title = "Warning!", Content=ToastContent, CssClass="e-toast-warning", Icon="e-warning toast-icons" },
+        new ToastModel{ Title = "Success!", Content=ToastContent, CssClass="e-toast-success", Icon="e-success toast-icons" },
+        new ToastModel{ Title = "Error!", Content=ToastContent, CssClass="e-toast-danger", Icon="e-error toast-icons" },
+        new ToastModel{ Title = "Information!", Content=ToastContent, CssClass="e-toast-info", Icon="e-info toast-icons" }
+    };
+    #endregion Toasters
+    public string[] GroupedColumns = new string[] { "PhysicalCountDate" };
+    private SfGrid<ProductPhysicalCount> DefaultGrid;
+    private List<ViewProduct> Product { get; set; }
+    private List<ViewBatchNo> BatchNo { get; set; }
+    private ProductPhysicalCount PhysicalcountData { get; set; }
+    #region Header DataSource
+    public class PhysicalCountAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        private UserManagement _userManagement;
+        public PhysicalCountAdapter(IToastService ts, UserManagement userManagement)
+        {
+            _userManagement = userManagement;
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            var data = new List<ProductPhysicalCount>();
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.ProductPhysicalCounts.OrderByDescending(o => o.PhysicalCountDate).ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            IEnumerable GridData = data;
+            int _count = data.Count;
+            if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+            {
+                // Searching
+                GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+            }
+            if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+            {
+                GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+            }
+            if (dataManagerRequest.Skip != 0)
+            {
+                GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+            }
+            if (dataManagerRequest.Take != 0)
+            {
+                GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+            }
+            IDictionary<string, object> aggregates = new Dictionary<string, object>();
+            if (dataManagerRequest.Aggregates != null) // Aggregation
+            {
+                aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+            }
+            if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+            {
+                foreach (var group in dataManagerRequest.Group)
+                {
+                    GridData = DataUtil.Group<ProductPhysicalCount>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                }
+            }
+            return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as ProductPhysicalCount);
+                    ProductPhysicalCount order = new ProductPhysicalCount();
+                    order.PhysicalCountId = Guid.NewGuid().ToString();
+                    order.PhysicalCountDate = val.PhysicalCountDate;
+                    order.ProductCode = val.ProductCode;
+                    order.BatchNo = val.BatchNo;
+                    order.QuantityatPharmacy = val.QuantityatPharmacy;
+                    order.QuantityatStore = val.QuantityatStore;
+                    order.CreatedBy = _userManagement.GetStaffId();
+                    //order.Vintage = val.Vintage;
+                    //order.SystemCount = val.SystemCount;
+                    order.Total = (val.QuantityatPharmacy + val.QuantityatStore);
+                    dbContext.ProductPhysicalCounts.Add(order);
+                    await dbContext.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                int data = (int)value;
+                var val = (value as ProductPhysicalCount);
+                using (var dbContext = new SPToCoreContext())
+                {
+                    dbContext.ProductPhysicalCounts.Remove(dbContext.ProductPhysicalCounts.FirstOrDefault(o => o.PhysicalCountId == val.PhysicalCountId));
+                    await dbContext.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as ProductPhysicalCount);
+                    var exist = dbContext.ProductPhysicalCounts.FirstOrDefault(o => o.PhysicalCountId == val.PhysicalCountId && o.ProductCode == val.ProductCode && o.BatchNo == val.BatchNo);
+                    if (exist != null)
+                    {
+                        //exist.ExpiryDate = val.ExpiryDate;
+                        exist.QuantityatPharmacy = val.QuantityatPharmacy;
+                        exist.QuantityatStore = val.QuantityatStore;
+                        exist.EditedBy = _userManagement.GetStaffId();
+                        //exist.SystemCount = val.SystemCount;
+                        exist.Total = (val.QuantityatStore+ val.QuantityatPharmacy);
+
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            return value;
+        }
+    }
+    public void OnActionBegin(ActionEventArgs<ProductPhysicalCount> args)
+    {
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+        {
+
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+        {
+            args.RowData.PhysicalCountId = Guid.NewGuid().ToString();
+            args.RowData.PhysicalCountDate = DateTime.Now.Date;
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+        {
+
+        }
+        //if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+        //{
+        //    this.OrderGrid.EndEdit();
+        //}
+    }
+    public void OnquantityChange()
+    {
+        if(PhysicalcountData.QuantityatPharmacy== null && PhysicalcountData.QuantityatStore != null)
+        {
+            PhysicalcountData.Total = PhysicalcountData.QuantityatStore;
+        }
+        else if (PhysicalcountData.QuantityatPharmacy != null && PhysicalcountData.QuantityatStore == null)
+        {
+            PhysicalcountData.Total = PhysicalcountData.QuantityatPharmacy;
+        }
+        else if (PhysicalcountData.QuantityatPharmacy != null && PhysicalcountData.QuantityatStore != null)
+        {
+            PhysicalcountData.Total = (PhysicalcountData.QuantityatPharmacy + PhysicalcountData.QuantityatStore);
+        }
+    }
+    public void OnProductChange(Syncfusion.Blazor.DropDowns.ChangeEventArgs<double, ViewProduct> args)
+    {
+        double val = Convert.ToDouble(args.Value);
+
+        BatchNo = context.ViewBatchNos.Where(o=> o.ProductCode == val).ToList();
+    }
+    #endregion Header DataSource
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (!userManagement.IsSignedIn())
+            {
+                Navigation.NavigateTo("Account/LoginPage", true);
+            }
+            Product = context.ViewProducts.ToList();
+            BatchNo = context.ViewBatchNos.ToList();
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+    }
+
+}
+

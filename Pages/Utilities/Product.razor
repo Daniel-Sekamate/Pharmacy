@@ -1,0 +1,1020 @@
+﻿@page "/Utilities/Product"
+@using Pharmacy.Models;
+@using System.Collections;
+@using Microsoft.EntityFrameworkCore;
+@using Syncfusion.Blazor.Data;
+@using System.IO;
+@inject PharmacyContext _context;
+@inject NavigationManager Navigation;
+@using Pharmacy.Data;
+@inject UserManagement userManagement;
+<style>
+    .e-edit-dialog {
+        max-height: 98%;
+        max-width: 100%;
+        min-width: 98%;
+        min-height: 95%;
+    }
+
+    .e-grid.e-bothlines .e-rowcell {
+        border-width: 0px 1px 1px 0px;
+        border-color: lightgray;
+    }
+
+    .e-edit-dialog .e-gridform .e-table {
+        border-collapse: separate;
+        border-spacing: 1px;
+        width: 100%;
+        border-color: black;
+    }
+
+    .e-grid .e-gridheader /*For line that separates the grid header and content*/ {
+        border-bottom-color: #ea1b8d;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid tr.e-hover /*For row hover*/ {
+        background-color: #e66aae;
+        color: #FFFFFF;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-alt_row /*For Alternate row color*/ {
+        background-color: #E5E4E2; /*#99CFE3;*/
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-dialog .gridform .e-rowcell {
+        padding: .5em;
+        border-bottom: 1px solid #c8c8c8;
+        border-left: 1px solid #c8c8c8;
+        /*font-size: 12px;*/
+    }
+
+    .e-grid .e-headercell {
+        color: whitesmoke;
+        background-color: black;
+        font-family: Cambria;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .Category {
+        background-color: steelblue;
+        color: white;
+    }
+
+    .customCSS.e-rowcell {
+        background-color: #EFF5FB;
+        /*font-family: 'Bell MT';
+        font-style: italic;*/
+        /*color: whitesmoke;*/
+        /*font-size: 20px;*/
+        font: large bolder;
+        font-weight: bolder;
+        font-family: 'Times New Roman', Times, serif;
+    }
+</style>
+<ol class="breadcrumb" style="margin-top:5px;">
+    <li class="breadcrumb-item active" style="width: 100%; background-color: black; color: white; font-family: Cambria; padding: 5px; font: bolder;"> <stong>Product Utilities </stong></li>
+</ol>
+<div class="row">
+    <div class="col-lg-12 control-section">
+        <SfToast @ref="ToastObj" ID="toast_type">
+            <ToastPosition X="@ToastPosition"></ToastPosition>
+        </SfToast>
+    </div>
+</div>
+<SfTab ID="Ej2Tab" Width="100%">
+    <TabItems>
+        <TabItem>
+            <ChildContent>
+                <TabHeader Text="Product Category"></TabHeader>
+            </ChildContent>
+            <ContentTemplate>
+                <SfGrid @ref="ProductCategoryGrid" TValue="AproductCategory"
+                        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" AllowGrouping="false" ShowColumnChooser="true" AllowTextWrap="true"
+                        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+                    @*<GridGroupSettings Columns="@GroupedColumns"></GridGroupSettings>*@
+                    <SfDataManager AdaptorInstance="@typeof(ProductCategoryAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+                    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+                    <GridEvents OnActionBegin="OnProductCategoryActionBegin" TValue="AproductCategory"></GridEvents>
+                    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+                        <Template>
+                            @{
+                                var proCat = (context as AproductCategory);
+                                <div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-12">
+                                            <SfNumericTextBox ID="CategoryId" @bind-Value="@(proCat.CategoryId)" Placeholder="Category Id" Format="N0" Enabled="false" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <SfTextBox Multiline="true" ID="CategoryDescription" @bind-Value="@(proCat.CategoryDescription)" Placeholder="Category Name" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </Template>
+                    </GridEditSettings>
+                    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                    <GridPageSettings PageSize="20"></GridPageSettings>
+                    <GridColumns>
+                        <GridColumn Type="ColumnType.CheckBox" Width="20"></GridColumn>
+                        <GridColumn Field=@nameof(AproductCategory.CategoryId) HeaderText="Category Id" TextAlign="TextAlign.Left" IsPrimaryKey="true" IsIdentity="true" Visible="true" Width="50"></GridColumn>
+                        <GridColumn Field=@nameof(AproductCategory.CategoryDescription) HeaderText="Category Name" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </ContentTemplate>
+        </TabItem>
+        <TabItem>
+            <ChildContent>
+                <TabHeader Text="Product Classification"></TabHeader>
+            </ChildContent>
+            <ContentTemplate>
+                <SfGrid @ref="ProductClassificationGrid" TValue="AproductClassification"
+                        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" AllowGrouping="false" ShowColumnChooser="true" AllowTextWrap="true"
+                        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+                    @*<GridGroupSettings Columns="@GroupedColumns"></GridGroupSettings>*@
+                    <SfDataManager AdaptorInstance="@typeof(ProductClassificationAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+                    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+                    <GridEvents OnActionBegin="OnProductClassificationActionBegin" TValue="AproductClassification"></GridEvents>
+                    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+                        <Template>
+                            @{
+                                var productClass = (context as AproductClassification);
+                                <div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-12">
+                                            <SfNumericTextBox ID="ClassificationId" @bind-Value="@(productClass.ClassificationId)" Placeholder="Classification Id" Format="N0" Enabled="false" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <SfDropDownList ID="ProductCategoryId" @bind-Value="@(productClass.ProductCategoryId)" Enabled="true" TItem="AproductCategory" TValue="int?" DataSource="@_ProductCategory" Placeholder="Product Category" FloatLabelType="FloatLabelType.Always">
+                                                <DropDownListFieldSettings Value="@nameof(AproductCategory.CategoryId)" Text="@nameof(AproductCategory.CategoryDescription)"></DropDownListFieldSettings>
+                                            </SfDropDownList>
+                                        </div>
+                                        <div class="form-group col-md-12">
+                                            <SfTextBox Multiline="true" ID="ClassificationDesc" @bind-Value="@(productClass.ClassificationDesc)" Placeholder="Classification Description" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </Template>
+                    </GridEditSettings>
+                    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                    <GridPageSettings PageSize="20"></GridPageSettings>
+                    <GridColumns>
+                        <GridColumn Type="ColumnType.CheckBox" Width="20"></GridColumn>
+                        <GridColumn Field=@nameof(AproductClassification.ClassificationId) HeaderText="Classification Id" TextAlign="TextAlign.Left" IsPrimaryKey="true" IsIdentity="true" Visible="true" Width="50"></GridColumn>
+                        <GridColumn Field=@nameof(AproductClassification.ProductCategoryId) HeaderText="Product Category" Width="180" ForeignKeyField="@nameof(AproductCategory.CategoryId)" ForeignKeyValue="@nameof(AproductCategory.CategoryDescription)" DataSource="@_ProductCategory"></GridColumn>
+                        <GridColumn Field=@nameof(AproductClassification.ClassificationDesc) HeaderText="Classification Description" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </ContentTemplate>
+        </TabItem>
+        <TabItem>
+            <ChildContent>
+                <TabHeader Text="Product Supplier"></TabHeader>
+            </ChildContent>
+            <ContentTemplate>
+                <SfGrid @ref="ProductSupplierGrid" TValue="AproductSupplier"
+                        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" AllowGrouping="false" ShowColumnChooser="true" AllowTextWrap="true"
+                        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+                    @*<GridGroupSettings Columns="@GroupedColumns"></GridGroupSettings>*@
+                    <SfDataManager AdaptorInstance="@typeof(SupplierAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+                    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+                    <GridEvents OnActionBegin="OnSupplierActionBegin" TValue="AproductSupplier"></GridEvents>
+                    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+                        <Template>
+                            @{
+                                var supplier = (context as AproductSupplier);
+                                <div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <SfNumericTextBox ID="SupplierId" @bind-Value="@(supplier.SupplierId)" Placeholder="Supplier Id" Format="N0" Enabled="false" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox Multiline="true" ID="SupplierDescription" @bind-Value="@(supplier.SupplierDescription)" Placeholder="Name" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="Email" @bind-Value="@(supplier.Email)" Placeholder="Email" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="Phone" @bind-Value="@(supplier.Phone)" Placeholder="Phone" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="Pobox" @bind-Value="@(supplier.Pobox)" Placeholder="P.O.box" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="Fax" @bind-Value="@(supplier.Fax)" Placeholder="fax" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="Street" @bind-Value="@(supplier.Street)" Placeholder="Street/Town" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="City" @bind-Value="@(supplier.City)" Placeholder="City" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <SfTextBox ID="Country" @bind-Value="@(supplier.Country)" Placeholder="Country" Enabled="true" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </Template>
+                    </GridEditSettings>
+                    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                    <GridPageSettings PageSize="20"></GridPageSettings>
+                    <GridColumns>
+                        <GridColumn Type="ColumnType.CheckBox" Width="20"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.SupplierId) HeaderText="Supplier Id" TextAlign="TextAlign.Left" IsPrimaryKey="true" IsIdentity="true" Visible="true" Width="50"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.SupplierDescription) HeaderText="Name" TextAlign="TextAlign.Left" Width="180"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.Email) HeaderText="Email" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.Phone) HeaderText="Phone" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.Country) HeaderText="Country" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.City) HeaderText="City" AllowEditing="false" ShowInColumnChooser="true" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.Street) HeaderText="Street" AllowEditing="false" ShowInColumnChooser="true" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.Fax) HeaderText="Fax" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(AproductSupplier.Pobox) HeaderText="P.O Box" AllowEditing="false" ShowInColumnChooser="true" Width="100"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </ContentTemplate>
+        </TabItem>
+        <TabItem>
+            <ChildContent>
+                <TabHeader Text="Products"></TabHeader>
+            </ChildContent>
+            <ContentTemplate>
+                <SfGrid @ref="ProductGrid" TValue="Aproduct"
+                        Toolbar="@(new string[] {"Add","Edit","Delete","Update","Cancel","ColumnChooser"})" AllowGrouping="true" ShowColumnChooser="true" AllowTextWrap="true"
+                        AllowPaging="true" AllowFiltering="true" GridLines="GridLine.Both" AllowSelection="true">
+                    <SfDataManager AdaptorInstance="@typeof(ProductAdapter)" Adaptor="Adaptors.CustomAdaptor"></SfDataManager>
+                    <GridSelectionSettings Mode="Syncfusion.Blazor.Grids.SelectionMode.Row" Type="Syncfusion.Blazor.Grids.SelectionType.Single"></GridSelectionSettings>
+                    <GridSearchSettings IgnoreCase="true"></GridSearchSettings>
+                    <GridEvents OnActionBegin="OnActionBegin" TValue="Aproduct"></GridEvents>
+                    <GridEditSettings AllowAdding="true" AllowDeleting="false" AllowEditing="true" Mode="@EditMode.Dialog">
+                        <Template>
+                            @{
+                                var SelectedProduct = (context as Aproduct);
+                                <div>
+                                                                <div class="form-row">
+
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfNumericTextBox ID="ProductCode" @bind-Value="@(SelectedProduct.ProductCode)" Format="N0" Placeholder="Product Code" Enabled="false" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfTextBox Multiline="true" ID="ProductDescription" @bind-Value="@(SelectedProduct.ProductDescription)" Placeholder="Product Description" FloatLabelType="FloatLabelType.Always"></SfTextBox>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfDropDownList ID="CategoryId" @bind-Value="@(SelectedProduct.CategoryId)" Enabled="true" TItem="AproductCategory" TValue="int?" DataSource="@ProductCategory" Placeholder="Product Category" FloatLabelType="FloatLabelType.Always">
+                                                                            <DropDownListFieldSettings Value="@nameof(AproductCategory.CategoryId)" Text="@nameof(AproductCategory.CategoryDescription)"></DropDownListFieldSettings>
+                                                                        </SfDropDownList>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfDropDownList ID="ProductClassificationId" @bind-Value="@(SelectedProduct.ProductClassificationId)" Enabled="true" TItem="AproductClassification" TValue="int?" DataSource="@productClassification" Placeholder="Product Classification" FloatLabelType="FloatLabelType.Always">
+                                                                            <DropDownListEvents TItem="AproductClassification" TValue="int?" ValueChange="OnComplaintClassificationChange"></DropDownListEvents>
+                                                                            <DropDownListFieldSettings Value="@nameof(AproductClassification.ClassificationId)" Text="@nameof(AproductClassification.ClassificationDesc)"></DropDownListFieldSettings>
+                                                                        </SfDropDownList>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfDropDownList ID="SupplierId" @bind-Value="@(SelectedProduct.SupplierId)" Enabled="true" TItem="AproductSupplier" TValue="int?" DataSource="@ProductSupplier" Placeholder="Supplier" FloatLabelType="FloatLabelType.Always">
+                                                                            <DropDownListFieldSettings Value="@nameof(AproductSupplier.SupplierId)" Text="@nameof(AproductSupplier.SupplierDescription)"></DropDownListFieldSettings>
+                                                                        </SfDropDownList>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfDropDownList ID="BasicUnitId" @bind-Value="@(SelectedProduct.BasicUnitId)" Enabled="true" TItem="AbasicUnit" TValue="int?" DataSource="@BasicUnit" Placeholder="Basic Unit" FloatLabelType="FloatLabelType.Always">
+                                                                            <DropDownListFieldSettings Value="@nameof(AbasicUnit.BasicUnitId)" Text="@nameof(AbasicUnit.BasicUnitDescription)"></DropDownListFieldSettings>
+                                                                        </SfDropDownList>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfNumericTextBox ID="PackSize" @bind-Value="@(SelectedProduct.PackSize)" Format="N2" Placeholder="Pack Size" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfNumericTextBox ID="ListPrice" @bind-Value="@(SelectedProduct.ListPrice)" Format="N2" Placeholder="Purchasing Price" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                                                    </div>
+                                                                    <div class="form-group col-md-6">
+                                                                        <SfNumericTextBox ID="RetailPrice" @bind-Value="@(SelectedProduct.RetailPrice)" Format="N2" Placeholder="Retail Price" FloatLabelType="FloatLabelType.Always"></SfNumericTextBox>
+                                                                    </div>
+                                                                </div>
+                                </div>
+                            }
+                        </Template>
+                    </GridEditSettings>
+                    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Excel"></GridFilterSettings>
+                    <GridPageSettings PageSize="20"></GridPageSettings>
+                    <GridColumns>
+                        <GridColumn Type="ColumnType.CheckBox" Width="50"></GridColumn>
+                        <GridColumn Field=@nameof(Aproduct.ProductCode) HeaderText=" Product Code" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Left" IsPrimaryKey="true" IsIdentity="true" Width="100"></GridColumn>
+                        <GridColumn Field=@nameof(Aproduct.ProductDescription) HeaderText=" Product Description" HeaderTextAlign="TextAlign.Center" Width="180"></GridColumn>
+                        <GridColumn Field=@nameof(Aproduct.CategoryId) HeaderText=" Category" HeaderTextAlign="TextAlign.Center" TextAlign="TextAlign.Left" Width="100" EditType="EditType.DropDownEdit" ForeignKeyField="@nameof(AproductCategory.CategoryId)" ForeignKeyValue="@nameof(AproductCategory.CategoryDescription)" DataSource="@ProductCategory"></GridColumn>
+                        <GridColumn Field=@nameof(Aproduct.SupplierId) HeaderText=" Supplier" HeaderTextAlign="TextAlign.Center" AllowEditing="false" ShowInColumnChooser="true" EditType="EditType.DropDownEdit" Width="100" ForeignKeyField="@nameof(AproductSupplier.SupplierId)" ForeignKeyValue="@nameof(AproductSupplier.SupplierDescription)" DataSource="@ProductSupplier"></GridColumn>
+                        <GridColumn Field=@nameof(Aproduct.BasicUnitId) HeaderText=" Basic Unit" HeaderTextAlign="TextAlign.Center" AllowEditing="false" ShowInColumnChooser="true" EditType="EditType.DropDownEdit" Width="100" ForeignKeyField="@nameof(AbasicUnit.BasicUnitId)" ForeignKeyValue="@nameof(AbasicUnit.BasicUnitDescription)" DataSource="@BasicUnit"></GridColumn>
+                        <GridColumn Field=@nameof(Aproduct.PackSize) HeaderText=" Pack Size" HeaderTextAlign="TextAlign.Center" EditType="EditType.NumericEdit" Format="N2" TextAlign="TextAlign.Left" Width="100"></GridColumn>
+                    </GridColumns>
+                </SfGrid>
+            </ContentTemplate>
+        </TabItem>
+    </TabItems>
+</SfTab>
+
+@code {
+    #region Toasters
+    public static string ToastContent { get; set; }
+    SfToast ToastObj;
+    SfToast DeleteToastObj;
+    private string ToastPosition = "Right";
+    private int AlarmTimeout { get; set; } = 120000;
+    private List<ToastModel> Toast = new List<ToastModel>
+{
+        new ToastModel{ Title = "Warning!", Content=ToastContent, CssClass="e-toast-warning", Icon="e-warning toast-icons" },
+        new ToastModel{ Title = "Success!", Content=ToastContent, CssClass="e-toast-success", Icon="e-success toast-icons" },
+        new ToastModel{ Title = "Error!", Content=ToastContent, CssClass="e-toast-danger", Icon="e-error toast-icons" },
+        new ToastModel{ Title = "Information!", Content=ToastContent, CssClass="e-toast-info", Icon="e-info toast-icons" }
+    };
+    #endregion Toasters
+
+    private SfGrid<Aproduct> ProductGrid;
+    private SfGrid<AproductCategory> ProductCategoryGrid;
+    private SfGrid<AproductClassification> ProductClassificationGrid;
+    private SfGrid<AproductSupplier> ProductSupplierGrid;
+    private List<AproductCategory> _ProductCategory { get; set; }
+
+    private List<AbasicUnit> BasicUnit { get; set; }
+    private List<AproductCategory> ProductCategory { get; set; }
+    private List<AproductSupplier> ProductSupplier { get; set; }
+    private List<AproductClassification> productClassification { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (!userManagement.IsSignedIn())
+            {
+                Navigation.NavigateTo("Account/LoginPage", true);
+            }
+            _ProductCategory = _context.AproductCategories.ToList();
+            BasicUnit = _context.AbasicUnits.ToList();
+            ProductSupplier = _context.AproductSuppliers.ToList();
+            ProductCategory = _context.AproductCategories.ToList();
+            productClassification = _context.AproductClassifications.ToList();
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+    }
+
+    #region Product Category DataSource
+    public class ProductCategoryAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        public ProductCategoryAdapter(IToastService ts)
+        {
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            var data = new List<AproductCategory>();
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.AproductCategories.OrderBy(o => o.CategoryDescription).ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            IEnumerable GridData = data;
+            int _count = data.Count;
+            if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+            {
+                // Searching
+                GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+            }
+            if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+            {
+                GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+            }
+            if (dataManagerRequest.Skip != 0)
+            {
+                GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+            }
+            if (dataManagerRequest.Take != 0)
+            {
+                GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+            }
+            IDictionary<string, object> aggregates = new Dictionary<string, object>();
+            if (dataManagerRequest.Aggregates != null) // Aggregation
+            {
+                aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+            }
+            if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+            {
+                foreach (var group in dataManagerRequest.Group)
+                {
+                    GridData = DataUtil.Group<AproductCategory>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                }
+            }
+            return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AproductCategory);
+                    int id = 1;
+                    var data = dbContext.AproductCategories.ToList().LastOrDefault();
+                    if (data != null)
+                    {
+                        id = (data.CategoryId + 1);
+                    }
+                    AproductCategory order = new AproductCategory();
+                    order.CategoryId = id;
+                    order.CategoryDescription = val.CategoryDescription;
+                    dbContext.AproductCategories.Add(order);
+                    await dbContext.SaveChangesAsync();
+                    toastService.ShowSuccess(val.CategoryDescription + " has been saved successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                int data = (int)value;
+                var val = (value as AproductCategory);
+                using (var dbContext = new SPToCoreContext())
+                {
+                    // dbContext.AphysicalCount.Remove(dbContext.AphysicalCount.FirstOrDefault(o => o.PhysicalCountId == val.PhysicalCountId));
+                    // await dbContext.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AproductCategory);
+                    var exist = dbContext.AproductCategories.FirstOrDefault(o => o.CategoryId == val.CategoryId);
+                    if (exist != null)
+                    {
+                        exist.CategoryDescription = val.CategoryDescription;
+
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+                        toastService.ShowSuccess(val.CategoryDescription + " has been updated successfully.");
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            return value;
+        }
+    }
+    public void OnProductCategoryActionBegin(ActionEventArgs<AproductCategory> args)
+    {
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+        {
+
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+        {
+
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+        {
+
+        }
+        //if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+        //{
+        //    this.OrderGrid.EndEdit();
+        //}
+    }
+    #endregion Product Category DataSource
+    #region Product Classification DataSource
+    public class ProductClassificationAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        public ProductClassificationAdapter(IToastService ts)
+        {
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            var data = new List<AproductClassification>();
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.AproductClassifications.OrderBy(o => o.ClassificationDesc).ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            IEnumerable GridData = data;
+            int _count = data.Count;
+            if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+            {
+                // Searching
+                GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+            }
+            if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+            {
+                GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+            }
+            if (dataManagerRequest.Skip != 0)
+            {
+                GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+            }
+            if (dataManagerRequest.Take != 0)
+            {
+                GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+            }
+            IDictionary<string, object> aggregates = new Dictionary<string, object>();
+            if (dataManagerRequest.Aggregates != null) // Aggregation
+            {
+                aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+            }
+            if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+            {
+                foreach (var group in dataManagerRequest.Group)
+                {
+                    GridData = DataUtil.Group<AproductClassification>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                }
+            }
+            return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AproductClassification);
+                    int id = 1;
+                    var data = dbContext.AproductClassifications.ToList().LastOrDefault();
+                    if (data != null)
+                    {
+                        id = (data.ClassificationId + 1);
+                    }
+                    val.ClassificationId = id;
+                    dbContext.AproductClassifications.Add(val);
+                    await dbContext.SaveChangesAsync();
+                    toastService.ShowSuccess(val.ClassificationDesc + " has been saved successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                int data = (int)value;
+                var val = (value as AproductClassification);
+                //using (var dbContext = new SPToCoreContext())
+                //{
+                //    dbContext.AphysicalCount.Remove(dbContext.AphysicalCount.FirstOrDefault(o => o.PhysicalCountId == val.PhysicalCountId));
+                //    await dbContext.SaveChangesAsync();
+                //}
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AproductClassification);
+                    var exist = dbContext.AproductClassifications.FirstOrDefault(o => o.ClassificationId == val.ClassificationId);
+                    if (exist != null)
+                    {
+                        exist.ProductCategoryId = val.ProductCategoryId;
+                        exist.ClassificationDesc = val.ClassificationDesc;
+
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+                        toastService.ShowSuccess(val.ClassificationDesc + " has been updated successfully.");
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            return value;
+        }
+    }
+    public void OnProductClassificationActionBegin(ActionEventArgs<AproductClassification> args)
+    {
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+        {
+            _ProductCategory = _context.AproductCategories.ToList();
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+        {
+            _ProductCategory = _context.AproductCategories.ToList();
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+        {
+
+        }
+        //if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+        //{
+        //    this.OrderGrid.EndEdit();
+        //}
+    }
+    #endregion Product Classification DataSource
+    #region Supplier DataSource
+    public class SupplierAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        public SupplierAdapter(IToastService ts)
+        {
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            var data = new List<AproductSupplier>();
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.AproductSuppliers.OrderBy(o => o.SupplierDescription).ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            IEnumerable GridData = data;
+            int _count = data.Count;
+            if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+            {
+                // Searching
+                GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+            }
+            if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+            {
+                GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+            }
+            if (dataManagerRequest.Skip != 0)
+            {
+                GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+            }
+            if (dataManagerRequest.Take != 0)
+            {
+                GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+            }
+            IDictionary<string, object> aggregates = new Dictionary<string, object>();
+            if (dataManagerRequest.Aggregates != null) // Aggregation
+            {
+                aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+            }
+            if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+            {
+                foreach (var group in dataManagerRequest.Group)
+                {
+                    GridData = DataUtil.Group<AproductSupplier>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                }
+            }
+            return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AproductSupplier);
+                    int id = 1;
+                    var data = dbContext.AproductSuppliers.ToList().LastOrDefault();
+                    if (data != null)
+                    {
+                        id = (data.SupplierId + 1);
+                    }
+                    val.SupplierId = id;
+                    dbContext.AproductSuppliers.Add(val);
+                    await dbContext.SaveChangesAsync();
+                    toastService.ShowSuccess(val.SupplierDescription + " has been saved successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                int data = (int)value;
+                var val = (value as AproductSupplier);
+                //using (var dbContext = new SPToCoreContext())
+                //{
+                //    dbContext.AphysicalCount.Remove(dbContext.AphysicalCount.FirstOrDefault(o => o.PhysicalCountId == val.PhysicalCountId));
+                //    await dbContext.SaveChangesAsync();
+                //}
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as AproductSupplier);
+                    var exist = dbContext.AproductSuppliers.FirstOrDefault(o => o.SupplierId == val.SupplierId);
+                    if (exist != null)
+                    {
+                        exist.SupplierDescription = val.SupplierDescription;
+                        exist.Email = val.Email;
+                        exist.Phone = val.Phone;
+                        exist.Pobox = val.Pobox;
+                        exist.Fax = val.Fax;
+                        exist.City = val.City;
+                        exist.Street = val.Street;
+                        exist.Country = val.Country;
+
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+                        toastService.ShowSuccess(val.SupplierDescription + " has been updated successfully.");
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+
+            return value;
+        }
+    }
+    public void OnSupplierActionBegin(ActionEventArgs<AproductSupplier> args)
+    {
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+        {
+
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+        {
+
+        }
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+        {
+
+        }
+        //if (args.RequestType == Syncfusion.Blazor.Grids.Action.Save)
+        //{
+        //    this.OrderGrid.EndEdit();
+        //}
+    }
+    #endregion Supplier DataSource
+    #region Aproducts DataSource
+    public class ProductAdapter : DataAdaptor
+    {
+        public IToastService toastService;
+        public ProductAdapter(IToastService ts)
+        {
+            toastService = ts;
+        }
+        public override async Task<Object> ReadAsync(DataManagerRequest dataManagerRequest, string key = null)
+        {
+            try
+            {
+                var data = new List<Aproduct>();
+                using (var dbContext = new SPToCoreContext())
+                {
+                    data = await dbContext.Aproducts.ToListAsync();
+                }
+                IEnumerable GridData = data;
+                int _count = data.Count;
+                if (dataManagerRequest.Search != null && dataManagerRequest.Search.Count > 0)
+                {
+                    // Searching
+                    GridData = DataOperations.PerformSearching(GridData, dataManagerRequest.Search);
+                }
+                if (dataManagerRequest.Sorted?.Count > 0) // perform Sorting
+                {
+                    GridData = DataOperations.PerformSorting(GridData, dataManagerRequest.Sorted);
+                }
+                if (dataManagerRequest.Skip != 0)
+                {
+                    GridData = DataOperations.PerformSkip(GridData, dataManagerRequest.Skip); //Paging
+                }
+                if (dataManagerRequest.Take != 0)
+                {
+                    GridData = DataOperations.PerformTake(GridData, dataManagerRequest.Take);
+                }
+                IDictionary<string, object> aggregates = new Dictionary<string, object>();
+                if (dataManagerRequest.Aggregates != null) // Aggregation
+                {
+                    aggregates = DataUtil.PerformAggregation(GridData, dataManagerRequest.Aggregates);
+                }
+                if (dataManagerRequest.Group != null && dataManagerRequest.Group.Any()) //Grouping
+                {
+                    foreach (var group in dataManagerRequest.Group)
+                    {
+                        GridData = DataUtil.Group<Aproduct>(GridData, group, dataManagerRequest.Aggregates, 0, dataManagerRequest.GroupByFormatter);
+                    }
+                }
+                return dataManagerRequest.RequiresCounts ? new DataResult() { Result = GridData, Count = _count, Aggregates = aggregates } : (object)GridData;
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+                return null;
+            }
+        }
+        public override async Task<Object> InsertAsync(DataManager dataManager, object value, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as Aproduct);
+                    var exist = dbContext.Aproducts.FirstOrDefault(o => o.ProductCode == val.ProductCode);
+                    if (exist != null)
+                    {
+                        //exist.ProductCode =val.ProductCode;
+                        exist.ProductDescription = val.ProductDescription;
+                        exist.CategoryId = val.CategoryId;
+                        exist.SupplierId = val.SupplierId;
+                        exist.BasicUnitId = val.BasicUnitId;
+                        exist.PackSize = val.PackSize;
+                        exist.ListPrice = val.ListPrice;
+                        exist.RetailPrice = val.RetailPrice;
+                        exist.ProductClassificationId = val.ProductClassificationId;
+
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                    }
+                    else
+                    {
+                        double id = 1;
+                        var data = dbContext.Aproducts.ToList().LastOrDefault();
+                        if (data != null)
+                        {
+                            id = (data.ProductCode + 1);
+                        }
+                        Aproduct order = new Aproduct();
+                        order.ProductCode = id;
+                        order.ProductDescription = val.ProductDescription;
+                        order.CategoryId = val.CategoryId;
+                        order.SupplierId = val.SupplierId;
+                        order.BasicUnitId = val.BasicUnitId;
+                        order.PackSize = val.PackSize;
+                        order.ListPrice = val.ListPrice;
+                        order.RetailPrice = val.RetailPrice;
+                        order.ProductClassificationId = val.ProductClassificationId;
+                        dbContext.Aproducts.Add(order);
+                    }
+                    await dbContext.SaveChangesAsync();
+                    string result = "Product " + val.ProductDescription + " has been added successfully";
+                    toastService.ShowSuccess(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+        public override async Task<object> RemoveAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            //int data = (int)value;
+            //var val = (value as Aproduct);
+            //using (var dbContext = new SPToCoreContext())
+            //{
+            //    dbContext.Aproduct.Remove(dbContext.Aproduct.FirstOrDefault(o => o.FacilityCode == val.FacilityCode && o.ProductCode == val.ProductCode && o.BatchNo == val.BatchNo && o.DateOfPhysicalCount == val.DateOfPhysicalCount));
+            //    await dbContext.SaveChangesAsync();
+            //}
+
+            return value;
+        }
+        public override async Task<object> UpdateAsync(DataManager dataManager, object value, string keyField, string key)
+        {
+            try
+            {
+                using (var dbContext = new SPToCoreContext())
+                {
+                    var val = (value as Aproduct);
+                    var exist = dbContext.Aproducts.FirstOrDefault(o => o.ProductCode == val.ProductCode);
+                    if (exist != null)
+                    {
+                        //exist.ProductCode =val.ProductCode;
+                        exist.ProductDescription = val.ProductDescription;
+                        exist.CategoryId = val.CategoryId;
+                        exist.SupplierId = val.SupplierId;
+                        exist.BasicUnitId = val.BasicUnitId;
+                        exist.PackSize = val.PackSize;
+                        exist.ListPrice = val.ListPrice;
+                        exist.RetailPrice = val.RetailPrice;
+                        exist.ProductClassificationId = val.ProductClassificationId;
+
+                        dbContext.Entry(exist).State = EntityState.Modified;
+                        await dbContext.SaveChangesAsync();
+                    }
+                    string result = "Product " + exist.ProductDescription + " has been updated successfully";
+                    toastService.ShowSuccess(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError(ex.ToString());
+            }
+            return value;
+        }
+    }
+    public async void OnActionBegin(ActionEventArgs<Aproduct> args)
+    {
+        try
+        {
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.BeginEdit)
+            {
+                BasicUnit = _context.AbasicUnits.ToList();
+                ProductSupplier = _context.AproductSuppliers.ToList();
+                ProductCategory = _context.AproductCategories.ToList();
+                productClassification = _context.AproductClassifications.ToList();
+            }
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Add)
+            {
+                BasicUnit = _context.AbasicUnits.ToList();
+                ProductSupplier = _context.AproductSuppliers.ToList();
+                ProductCategory = _context.AproductCategories.ToList();
+                productClassification = _context.AproductClassifications.ToList();
+            }
+            if (args.RequestType == Syncfusion.Blazor.Grids.Action.Cancel)
+            {
+
+            }
+        }
+        catch (Exception ex)
+        {
+            await ToastObj.Show(new ToastModel { Title = "Error!", Content = ex.ToString(), CssClass = "e-toast-danger", Icon = "e-error toast-icons" });
+        }
+
+    }
+    public void OnComplaintClassificationChange(Syncfusion.Blazor.DropDowns.ChangeEventArgs<int?, AproductClassification> args)
+    {
+        int val = Convert.ToInt32(args.Value);
+        if (val == 2)
+        {
+
+        }
+        else
+        {
+
+        }
+    }
+    #endregion Aproducts DataSource
+}
+

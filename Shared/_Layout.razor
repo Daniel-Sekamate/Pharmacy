@@ -1,0 +1,202 @@
+﻿@using Pharmacy.Data;
+@inject UserManagement userManagement;
+<style>
+    .container ul.e-menu {
+        display: inline-block;
+        height: 100%;
+        width: auto;
+        background: transparent;
+        align-items: center;
+        vertical-align: middle;
+    }
+
+    .e-menu-wrapper ul, .e-menu-container ul {
+        background-color: transparent;
+        color: #007bff;
+    }
+
+        .e-menu-wrapper ul.e-menu, .e-menu-container ul.e-menu {
+            display: inline-block;
+            height: 100%;
+        }
+
+    .e-menu-wrapper, .e-menu-container {
+        border: none;
+        border-radius: 0px;
+        /* display: block; */
+        /*width:100%;*/
+        line-height: 0;
+        height: 100%;
+    }
+
+        .e-menu-container ul .e-menu-item {
+            cursor: pointer;
+            position: relative;
+            display: -ms-inline-flexbox;
+            display: inline-flex;
+            height: 100%;
+            line-height: 30px;
+            padding: 0 12px;
+            vertical-align: middle;
+            align-items: center;
+            white-space: nowrap;
+            font-size: large;
+            font-family: cambria;
+            color: black;
+        }
+
+            .e-menu-wrapper ul .e-menu-item .e-caret, .e-menu-container ul .e-menu-item .e-caret {
+                font-size: 9px;
+                height: auto;
+                line-height: 30px;
+                position: absolute;
+                right: 12px;
+                top: 0;
+                width: auto;
+            }
+</style>
+<SfMenu Items="@MenuItems"></SfMenu>
+
+@code {
+    public List<MenuItem> MenuItems = new List<MenuItem>();
+    protected override async Task OnInitializedAsync()
+    {
+        MenuItems.Add(new MenuItem { Text = "HOME", Url = "/Index" });
+        //#region Ware House
+        //if (await userManagement.IsInRole("ADMINISTRATOR") || await userManagement.IsInRole("Warehouse Manager") || await userManagement.IsInRole("Warehouse Supervisor"))
+        //{
+        //    MenuItems.Add(
+        //      new MenuItem
+        //      {
+        //          Text = "WAREHOUSE",
+        //          Items = new List<MenuItem>
+        //{
+        //               new MenuItem{ Text = "ORDERS" , Items = new List<MenuItem>{
+        //                  new MenuItem{ Text = "PHYSICAL COUNT",  Url="/Inventory/PhysicalCount"},
+        //                  new MenuItem{ Separator=true},
+        //                  #region Store Orders
+        //                 new MenuItem{ Text = "STORE ORDERS", Items = new List<MenuItem>{
+        //                  new MenuItem{ Text = "REQUESTED STOCK", Items = new List<MenuItem>{
+        //                      new MenuItem{ Text = "WINES",  Url="/Warehouse/StoreOrderRequests"},
+        //                      new MenuItem{ Separator=true},
+        //                      new MenuItem{ Text = "OTHER PRODUCTS",  Url="/Warehouse/StoreOrderRequestsOther"},
+        //                    }
+
+        //                  },
+        //                  new MenuItem{ Separator=true},
+        //                  new MenuItem{ Text = "RETURNED STOCK", Items = new List<MenuItem>{
+        //                      new MenuItem{ Text = "WINES",  Url="Store/WarehouseReceivedOrder"},
+        //                      new MenuItem{ Separator=true},
+        //                      new MenuItem{ Text = "OTHER PRODUCTS",  Url="/Inventory/OrdersOtherProducts"},
+        //                    }
+
+        //                  },
+        //                 },
+        //                 },
+        //    #endregion
+        //                 new MenuItem{ Separator=true},
+        //                    #region Supplier Orders
+        //                                new MenuItem{ Text = "SUPPLIER ORDERS", Items = new List<MenuItem>{
+        //                                  new MenuItem{ Text = "NEW ORDERS", Items = new List<MenuItem>{
+        //                                      new MenuItem{ Text = "WINES",  Url="/Warehouse/SupplierOrders"},
+        //                                      new MenuItem{ Separator=true},
+        //                                      new MenuItem{ Text = "OTHER PRODUCTS",  Url="/Warehouse/SupplierOtherOrders"},
+        //                                    }
+
+        //                                  },
+        //                                  new MenuItem{ Separator=true},
+        //                                  new MenuItem{ Text = "RECEIVED STOCK", Items = new List<MenuItem>{
+        //                                      new MenuItem{ Text = "WINES",  Url="/Inventory/Inventory"},
+        //                                      new MenuItem{ Separator=true},
+        //                                      new MenuItem{ Text = "OTHER PRODUCTS",  Url="/Warehouse/SupplierOrderReceivedOther"},
+        //                                    }
+
+        //                                  },
+        //        #endregion
+        //                }
+        //                  },
+        //                }
+
+        //               },
+        //               new MenuItem{ Separator=true},
+        //               new MenuItem{ Text = "RECORD WASTAGE",  Url="/Warehouse/Wastage"},
+        //            }
+        //      }
+        //        );
+        //}
+        //#endregion
+        #region Store
+        if (await userManagement.IsInRole("Administrator") || await userManagement.IsInRole("Store Manager") || await userManagement.IsInRole("Store Supervisor"))
+        {
+            MenuItems.Add(
+              new MenuItem
+              {
+                  Text = "STORE",
+                  Items = new List<MenuItem>
+        {
+                       new MenuItem{ Text = "ORDERING" , Items = new List<MenuItem>{
+                          new MenuItem{ Text = "PHYSICAL COUNT",  Url="/Ordering/PhysicalCount"},
+                          new MenuItem{ Separator=true},
+                          new MenuItem{ Text = "RECORD WASTAGE",  Url="/Ordering/ProductWastage"},
+                          new MenuItem{ Separator=true},
+                         #region SUPPLIER ORDERS
+                             new MenuItem{ Text = "SUPPLIER ORDERS", Items = new List<MenuItem>{
+                                              new MenuItem{ Text = "PLACE ORDER",  Url="/Ordering/SupplierOrders"},
+                                              new MenuItem{ Separator=true},
+                                              new MenuItem{ Text = "RECEIVE ORDER",  Url="/Ordering/ReceivedOrdersPage"},
+                                            }
+
+                                              },
+                           #endregion
+                       }
+
+                       }
+                    }
+
+              }
+                );
+        }
+        #endregion
+        #region Sales person
+        if (await userManagement.IsInRole("Administrator") || await userManagement.IsInRole("Store Manager") || await userManagement.IsInRole("Sales Person"))
+        {
+            MenuItems.Add(
+              new MenuItem
+              {
+                  Text = "POS",
+                  Items = new List<MenuItem>
+        {
+                       new MenuItem{ Text = "New Orders",  Url="/Sales/PosOrders"},
+                    }
+              }
+                );
+        }
+        #endregion
+        #region Utilities
+        if (await userManagement.IsInRole("Administrator") || await userManagement.IsInRole("Store Manager") || await userManagement.IsInRole("Warehouse Manager"))
+        {
+            var utilities = new List<MenuItem>()
+    {
+                new MenuItem{ Text = "PRODUCT PRIMARY DATA", Url="/Utilities/Product"},
+                //new MenuItem{ Separator=true},
+                //new MenuItem{ Text = "WAREHOUSE/STORE PRODUCT", Url="/Product/Product"},
+            };
+            //if (await userManagement.IsInRole("Store Manager") || await userManagement.IsInRole("Administrator"))
+            //{
+            //    utilities.Add(new MenuItem { Separator = true });
+            //    utilities.Add(new MenuItem { Text = "MENU PRODUCTS/ITEMS", Url = "/Inventory/MenuItem" });
+            //}
+            if (await userManagement.IsInRole("Administrator"))
+            {
+                utilities.Add(new MenuItem { Separator = true });
+                utilities.Add(new MenuItem { Text = "STAFF", Url = "/Utilities/Staff" });
+                utilities.Add(new MenuItem { Separator = true });
+                utilities.Add(new MenuItem { Text = "REGISTER SYSTEM USER", Url = "/Account/Register" });
+            }
+            MenuItems.Add(new MenuItem { Text = "UTILITIES", Items = utilities });
+
+        }
+        #endregion
+        base.OnInitialized();
+    }
+}

@@ -1,0 +1,28 @@
+﻿@page "/"
+@inject NavigationManager Navigation;
+@using Pharmacy.Data;
+@inject UserManagement userManagement;
+@*<AuthorizeView>
+        <Authorized>
+            <Redirect Url="Index" />
+        </Authorized>
+        <NotAuthorized>
+            <Redirect Url="Account/Login" />
+        </NotAuthorized>
+    </AuthorizeView>*@
+
+@code{
+    [Parameter] public string Url { get; set; }
+    protected override void OnInitialized()
+    {
+        if (userManagement.IsSignedIn())
+        {
+            Navigation.NavigateTo("Index");
+        }
+        else
+        {
+            //Navigation.NavigateTo("Account/Login",true);
+            Navigation.NavigateTo("Account/LoginPage");
+        }
+    }
+}
